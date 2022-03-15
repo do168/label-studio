@@ -62,3 +62,5 @@ deploy/nginx/certs/*
 mydata/
 deploy/pgsql/certs/*
 !deploy/pgsql/certs/.placeholder
+
+package-lock.json

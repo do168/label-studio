@@ -147,6 +147,12 @@ export const Menubar = ({
                 href={absoluteURL("/logout")}
                 data-external
               />
+              <Menu.Item
+                icon={<LsDoor/>}
+                label="Test"
+                href={absoluteURL("/logout")}
+                data-external
+              />
             </Menu>
           )}>
             <div className={menubarClass.elem('user')}>

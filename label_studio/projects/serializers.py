@@ -112,3 +112,4 @@ class ProjectSummarySerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectSummary
         fields = '__all__'
+

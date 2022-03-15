@@ -86,6 +86,23 @@ export const CreateProject = ({ onClose }) => {
     }
   }, [project, projectBody, finishUpload]);
 
+  const onAutoCreate = React.useCallback(async () => {
+    const imported = await finishUpload();
+    if (!imported) return;
+
+    setWaitingStatus(true);
+    const response = await api.callApi('autoCreateProject',{
+      params: {
+        pk: project.id,
+      },
+      body: projectBody,
+    });
+
+    if (response !== null) {
+      history.push(`/projects/${response.id}/data`);
+    }
+  }, [project, projectBody, finishUpload]);
+
   const onSaveName = async () => {
     if (error) return;
     const res = await api.callApi('updateProjectRaw', {
@@ -123,6 +140,7 @@ export const CreateProject = ({ onClose }) => {
           <Space>
             <Button look="danger" size="compact" onClick={onDelete} waiting={waiting}>Delete</Button>
             <Button look="primary" size="compact" onClick={onCreate} waiting={waiting || uploading} disabled={!project || uploadDisabled || error}>Save</Button>
+            <Button look="primary" size="compact" onClick={onAutoCreate} waiting={waiting || uploading} disabled={!project || uploadDisabled || error}>AUTOSave</Button>
           </Space>
         </Modal.Header>
         <ProjectName

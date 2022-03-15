@@ -16,6 +16,7 @@ export const API_CONFIG = {
     project: "/projects/:pk",
     updateProject: "PATCH:/projects/:pk",
     createProject: "POST:/projects",
+    autoCreateProject: "POST:/projects/auto",
     deleteProject: "DELETE:/projects/:pk",
 
     // Config and Import

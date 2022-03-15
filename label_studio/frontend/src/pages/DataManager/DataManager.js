@@ -66,6 +66,7 @@ export const DataManagerPage = ({ ...props }) => {
   const dataManagerRef = useRef();
   const projectId = project?.id;
 
+
   const init = useCallback(async () => {
     if (!LabelStudio) return;
     if (!DataManager) return;
@@ -77,7 +78,11 @@ export const DataManagerPage = ({ ...props }) => {
       params: { project: project.id },
     });
 
+    console.log("mlBackends: ", mlBackends);
+
     const interactiveBacked = (mlBackends ?? []).find(({ is_interactive }) => is_interactive);
+
+    console.log("interactiveBackend: ", interactiveBacked);
 
     const dataManager = (dataManagerRef.current = dataManagerRef.current ?? await initializeDataManager(
       root.current,
@@ -109,10 +114,12 @@ export const DataManagerPage = ({ ...props }) => {
     });
 
     if (interactiveBacked) {
+      console.log("interativeBackend is not null", interactiveBacked);
       dataManager.on("lsf:regionFinishedDrawing", (reg, group) => {
         const { lsf, task, currentAnnotation: annotation } = dataManager.lsf;
         const ids = group.map(r => r.id);
         const result = annotation.serializeAnnotation().filter((res) => ids.includes(res.id));
+        
 
         const suggestionsRequest = api.callApi("mlInteractive", {
           params: { pk: interactiveBacked.id },
@@ -124,6 +131,7 @@ export const DataManagerPage = ({ ...props }) => {
 
         lsf.loadSuggestions(suggestionsRequest, (response) => {
           if (response.data) {
+            console.log("response.data: ", response.data)
             return response.data.result;
           }
 
@@ -140,6 +148,7 @@ export const DataManagerPage = ({ ...props }) => {
       dataManagerRef.current.destroy();
       dataManagerRef.current = null;
     }
+    
   }, [dataManagerRef]);
 
   useEffect(() => {
@@ -248,6 +257,7 @@ DataManagerPage.context = ({ dmRef }) => {
           {label}
         </Button>
       ))}
+
     </Space>
   ) : null;
 };

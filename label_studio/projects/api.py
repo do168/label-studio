@@ -31,6 +31,7 @@ from projects.serializers import (
 )
 from tasks.models import Task, Annotation, Prediction, TaskLock
 from tasks.serializers import TaskSerializer, TaskSimpleSerializer, TaskWithAnnotationsAndPredictionsAndDraftsSerializer
+
 from webhooks.utils import api_webhook, api_webhook_for_delete, emit_webhooks_for_instance
 from webhooks.models import WebhookAction
 
@@ -44,7 +45,6 @@ from data_manager.functions import get_prepared_queryset, filters_ordering_selec
 from data_manager.models import View
 
 logger = logging.getLogger(__name__)
-
 
 _result_schema = openapi.Schema(
     title='Labeling result',
@@ -152,27 +152,28 @@ class ProjectListAPI(generics.ListCreateAPIView):
 
     @api_webhook(WebhookAction.PROJECT_CREATED)
     def post(self, request, *args, **kwargs):
+        logger.error(type(request))
+        logger.error(request.data)
         return super(ProjectListAPI, self).post(request, *args, **kwargs)
 
 
 @method_decorator(name='get', decorator=swagger_auto_schema(
-        tags=['Projects'],
-        operation_summary='Get project by ID',
-        operation_description='Retrieve information about a project by project ID.'
-    ))
+    tags=['Projects'],
+    operation_summary='Get project by ID',
+    operation_description='Retrieve information about a project by project ID.'
+))
 @method_decorator(name='delete', decorator=swagger_auto_schema(
-        tags=['Projects'],
-        operation_summary='Delete project',
-        operation_description='Delete a project by specified project ID.'
-    ))
+    tags=['Projects'],
+    operation_summary='Delete project',
+    operation_description='Delete a project by specified project ID.'
+))
 @method_decorator(name='patch', decorator=swagger_auto_schema(
-        tags=['Projects'],
-        operation_summary='Update project',
-        operation_description='Update the project settings for a specific project.',
-        request_body=ProjectSerializer
-    ))
+    tags=['Projects'],
+    operation_summary='Update project',
+    operation_description='Update the project settings for a specific project.',
+    request_body=ProjectSerializer
+))
 class ProjectAPI(generics.RetrieveUpdateDestroyAPIView):
-
     parser_classes = (JSONParser, FormParser, MultiPartParser)
     queryset = Project.objects.with_counts()
     permission_required = ViewClassPermission(
@@ -235,12 +236,11 @@ class ProjectAPI(generics.RetrieveUpdateDestroyAPIView):
     this task.
     """,
     responses={200: TaskWithAnnotationsAndPredictionsAndDraftsSerializer()}
-    ))  # leaving this method decorator info in case we put it back in swagger API docs
+))  # leaving this method decorator info in case we put it back in swagger API docs
 class ProjectNextTaskAPI(generics.RetrieveAPIView):
-
     permission_required = all_permissions.tasks_view
     serializer_class = TaskWithAnnotationsAndPredictionsAndDraftsSerializer  # using it for swagger API docs
-    swagger_schema = None # this endpoint doesn't need to be in swagger API docs
+    swagger_schema = None  # this endpoint doesn't need to be in swagger API docs
 
     def _get_random_unlocked(self, task_query, upper_limit=None):
         # get random task from task query, ignoring locked tasks
@@ -414,11 +414,11 @@ class ProjectNextTaskAPI(generics.RetrieveAPIView):
         # detect solved and not solved tasks
         assigned_flag = hasattr(self, 'assignee_flag') and self.assignee_flag
         user_solved_tasks_array = user.annotations.filter(ground_truth=False)
-        user_solved_tasks_array = user_solved_tasks_array.filter(task__isnull=False)\
+        user_solved_tasks_array = user_solved_tasks_array.filter(task__isnull=False) \
             .distinct().values_list('task__pk', flat=True)
 
         with conditional_atomic():
-            not_solved_tasks = project.prepared_tasks.\
+            not_solved_tasks = project.prepared_tasks. \
                 exclude(pk__in=user_solved_tasks_array)
 
             # if annotator is assigned for tasks, he must to solve it regardless of is_labeled=True
@@ -496,12 +496,12 @@ class ProjectNextTaskAPI(generics.RetrieveAPIView):
 
 
 @method_decorator(name='post', decorator=swagger_auto_schema(
-        tags=['Projects'],
-        operation_summary='Validate label config',
-        operation_description='Validate an arbitrary labeling configuration.',
-        responses={200: 'Validation success'},
-        request_body=ProjectLabelConfigSerializer,
-    ))
+    tags=['Projects'],
+    operation_summary='Validate label config',
+    operation_description='Validate an arbitrary labeling configuration.',
+    responses={200: 'Validation success'},
+    request_body=ProjectLabelConfigSerializer,
+))
 class LabelConfigValidateAPI(generics.CreateAPIView):
     parser_classes = (JSONParser, FormParser, MultiPartParser)
     permission_classes = (AllowAny,)
@@ -524,19 +524,19 @@ class LabelConfigValidateAPI(generics.CreateAPIView):
 
 
 @method_decorator(name='post', decorator=swagger_auto_schema(
-        tags=['Projects'],
-        operation_summary='Validate project label config',
-        operation_description="""
+    tags=['Projects'],
+    operation_summary='Validate project label config',
+    operation_description="""
         Determine whether the label configuration for a specific project is valid.
         """,
-        manual_parameters=[
-            openapi.Parameter(
-                name='id',
-                type=openapi.TYPE_INTEGER,
-                in_=openapi.IN_PATH,
-                description='A unique integer value identifying this project.'),
-        ],
-        request_body=ProjectLabelConfigSerializer,
+    manual_parameters=[
+        openapi.Parameter(
+            name='id',
+            type=openapi.TYPE_INTEGER,
+            in_=openapi.IN_PATH,
+            description='A unique integer value identifying this project.'),
+    ],
+    request_body=ProjectLabelConfigSerializer,
 ))
 class ProjectLabelConfigValidateAPI(generics.RetrieveAPIView):
     """ Validate label config
@@ -574,37 +574,36 @@ class ProjectSummaryAPI(generics.RetrieveAPIView):
 
 
 @method_decorator(name='delete', decorator=swagger_auto_schema(
-        tags=['Projects'],
-        operation_summary='Delete all tasks',
-        operation_description='Delete all tasks from a specific project.',
-        manual_parameters=[
-            openapi.Parameter(
-                name='id',
-                type=openapi.TYPE_INTEGER,
-                in_=openapi.IN_PATH,
-                description='A unique integer value identifying this project.'),
-        ],
+    tags=['Projects'],
+    operation_summary='Delete all tasks',
+    operation_description='Delete all tasks from a specific project.',
+    manual_parameters=[
+        openapi.Parameter(
+            name='id',
+            type=openapi.TYPE_INTEGER,
+            in_=openapi.IN_PATH,
+            description='A unique integer value identifying this project.'),
+    ],
 ))
 @method_decorator(name='get', decorator=swagger_auto_schema(
-        tags=['Projects'],
-        operation_summary='List project tasks',
-        operation_description="""
+    tags=['Projects'],
+    operation_summary='List project tasks',
+    operation_description="""
             Retrieve a paginated list of tasks for a specific project. For example, use the following cURL command:
             ```bash
             curl -X GET {}/api/projects/{{id}}/tasks/ -H 'Authorization: Token abc123'
             ```
         """.format(settings.HOSTNAME or 'https://localhost:8080'),
-        manual_parameters=[
-            openapi.Parameter(
-                name='id',
-                type=openapi.TYPE_INTEGER,
-                in_=openapi.IN_PATH,
-                description='A unique integer value identifying this project.'),
-        ],
-    ))
+    manual_parameters=[
+        openapi.Parameter(
+            name='id',
+            type=openapi.TYPE_INTEGER,
+            in_=openapi.IN_PATH,
+            description='A unique integer value identifying this project.'),
+    ],
+))
 class ProjectTaskListAPI(generics.ListCreateAPIView,
                          generics.DestroyAPIView):
-
     parser_classes = (JSONParser, FormParser)
     queryset = Task.objects.all()
     permission_required = ViewClassPermission(
@@ -649,7 +648,8 @@ class ProjectTaskListAPI(generics.ListCreateAPIView,
     def perform_create(self, serializer):
         project = get_object_with_check_and_log(self.request, Project, pk=self.kwargs['pk'])
         instance = serializer.save(project=project)
-        emit_webhooks_for_instance(self.request.user.active_organization, project, WebhookAction.TASKS_CREATED, [instance])
+        emit_webhooks_for_instance(self.request.user.active_organization, project, WebhookAction.TASKS_CREATED,
+                                   [instance])
 
 
 class TemplateListAPI(generics.ListAPIView):
@@ -698,3 +698,187 @@ class ProjectModelVersions(generics.RetrieveAPIView):
     def get(self, request, *args, **kwargs):
         project = self.get_object()
         return Response(data=project.get_model_versions(with_counters=True))
+
+
+class TritonApi(generics.ListCreateAPIView):
+
+
+
+    parser_classes = (JSONParser, FormParser, MultiPartParser)
+    serializer_class = ProjectSerializer
+    filter_backends = [filters.OrderingFilter]
+    permission_required = ViewClassPermission(
+        GET=all_permissions.projects_view,
+        POST=all_permissions.projects_create,
+    )
+    ordering = ['-created_at']
+    pagination_class = ProjectListPagination
+
+    queryset = Task.objects.all()
+
+    def perform_create(self, ser):
+        try:
+            project = ser.save(organization=self.request.user.active_organization)
+        except IntegrityError as e:
+            if str(e) == 'UNIQUE constraint failed: project.title, project.created_by_id':
+                raise ProjectExistException('Project with the same name already exists: {}'.
+                                            format(ser.validated_data.get('title', '')))
+            raise LabelStudioDatabaseException('Database error during project creation. Try again.')
+
+    def get_queryset(self):
+        projects = Project.objects.filter(organization=self.request.user.active_organization)
+        return ProjectManager.with_counts_annotate(projects)
+
+    def get_serializer_context(self):
+        context = super(TritonApi, self).get_serializer_context()
+        context['created_by'] = self.request.user
+        return context
+
+    def post(self, request, *args, **kwargs):
+        project_list_api = ProjectListAPI()
+        title = "Created from Auto-labeling"
+        label_config = '''<View><Image name="image" value="$image"/><RectangleLabels name="label" 
+        toName="image"><Label value="obj" background="#FFA39E"/></RectangleLabels></View> '''
+        # self.request['data'] = self.request['data'].replace({"title" : title, "label_config" : label_config})
+        logger.error(request.data)
+
+        # datas = {'data': {}}
+        # datas['data']['title'] = title
+        # datas['data']['label_config'] = label_config
+
+        # datas = dict(data=dict(title=title, label_config=label_config))
+
+        request.data.update({"title": title, "label_config": label_config})
+        project_request_data = {'data': {'title': title, 'label_config': label_config}}
+
+        # data = project_list_api.post(request, args, kwargs)
+        data = super(TritonApi, self).post(request, *args, **kwargs)
+        project_id = data.data.get('id')
+        print(project_id)
+
+        request.data.update({'data': {'image': '/data/local-files/?d=test/273275,5f45d0002d92d1b5.jpg'},
+            'annotations': [{
+                'result': [{
+                    "original_width": 480,
+                    "original_height": 717,
+                    "image_rotation": 0,
+                    "value": {
+                        "x": 6.25,
+                        "y": 43.793584379358435,
+                        "width": 77.29166666666667,
+                        "height": 39.05160390516039,
+                        "rotation": 0,
+                        "rectanglelabels": [
+                            "Car"
+                        ]
+                    },
+                    'from_name': 'label',
+                    'to_name': 'image',
+                    'type': 'rectanglelabels',
+                    'origin': 'prediction'
+                }],
+                'score': 0.87
+            }]})
+        # task_api = ImportAPI()
+        # task_api.post(request, *args, pk=project_id)
+
+        return data
+
+# import time
+# from core.utils.params import list_of_strings_from_request, bool_from_request
+# from label_studio.data_import.uploader import load_tasks
+#
+# class ImportAPI(generics.CreateAPIView):
+#     permission_required = all_permissions.projects_change
+#     parser_classes = (JSONParser, MultiPartParser, FormParser)
+#     serializer_class = ImportApiSerializer
+#     queryset = Task.objects.all()
+#
+#     def get_serializer_context(self):
+#         project_id = self.kwargs.get('pk')
+#         if project_id:
+#             project = generics.get_object_or_404(Project.objects.for_user(self.request.user), pk=project_id)
+#         else:
+#             project = None
+#         return {'project': project, 'user': self.request.user}
+#
+#     def post(self, *args, **kwargs):
+#         return super(ImportAPI, self).post(*args, **kwargs)
+#
+#     def _save(self, tasks):
+#         serializer = self.get_serializer(data=tasks, many=True)
+#         serializer.is_valid(raise_exception=True)
+#         task_instances = serializer.save(project_id=self.kwargs['pk'])
+#         project = generics.get_object_or_404(Project.objects.for_user(self.request.user), pk=self.kwargs['pk'])
+#         emit_webhooks_for_instance(self.request.user.active_organization, project, WebhookAction.TASKS_CREATED, task_instances)
+#         return task_instances, serializer
+#
+#     def _reformat_predictions(self, tasks, preannotated_from_fields):
+#         new_tasks = []
+#         for task in tasks:
+#             if 'data' in task:
+#                 task = task['data']
+#             predictions = [{'result': task.pop(field)} for field in preannotated_from_fields]
+#             new_tasks.append({
+#                 'data': task,
+#                 'predictions': predictions
+#             })
+#         return new_tasks
+#
+#     def create(self, request, *args, **kwargs):
+#         start = time.time()
+#         commit_to_project = bool_from_request(request.query_params, 'commit_to_project', True)
+#         return_task_ids = bool_from_request(request.query_params, 'return_task_ids', False)
+#         preannotated_from_fields = list_of_strings_from_request(request.query_params, 'preannotated_from_fields', None)
+#
+#         # check project permissions
+#         project = generics.get_object_or_404(Project.objects.for_user(self.request.user), pk=self.kwargs['pk'])
+#
+#         # upload files from request, and parse all tasks
+#         parsed_data, file_upload_ids, could_be_tasks_lists, found_formats, data_columns = load_tasks(request, project)
+#
+#         if preannotated_from_fields:
+#             # turn flat task JSONs {"column1": value, "column2": value} into {"data": {"column1"..}, "predictions": [{..."column2"}]  # noqa
+#             parsed_data = self._reformat_predictions(parsed_data, preannotated_from_fields)
+#
+#         if commit_to_project:
+#             # Immediately create project tasks and update project states and counters
+#             tasks, serializer = self._save(parsed_data)
+#             task_count = len(tasks)
+#             annotation_count = len(serializer.db_annotations)
+#             prediction_count = len(serializer.db_predictions)
+#             # Update tasks states if there are related settings in project
+#             # after bulk create we can bulk update tasks stats with
+#             # flag_update_stats=True but they are already updated with signal in same transaction
+#             # so just update tasks_number_changed
+#             project.update_tasks_states(
+#                 maximum_annotations_changed=False,
+#                 overlap_cohort_percentage_changed=False,
+#                 tasks_number_changed=True
+#             )
+#             logger.info('Tasks bulk_update finished')
+#
+#             project.summary.update_data_columns(parsed_data)
+#             # TODO: project.summary.update_created_annotations_and_labels
+#         else:
+#             # Do nothing - just output file upload ids for further use
+#             task_count = len(parsed_data)
+#             annotation_count = None
+#             prediction_count = None
+#
+#         duration = time.time() - start
+#
+#         response = {
+#             'task_count': task_count,
+#             'annotation_count': annotation_count,
+#             'prediction_count': prediction_count,
+#             'duration': duration,
+#             'file_upload_ids': file_upload_ids,
+#             'could_be_tasks_list': could_be_tasks_lists,
+#             'found_formats': found_formats,
+#             'data_columns': data_columns
+#         }
+#         if return_task_ids:
+#             response['task_ids'] = [task.id for task in tasks]
+#
+#         return Response(response, status=status.HTTP_201_CREATED)

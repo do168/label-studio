@@ -63,5 +63,5 @@ const App = ({content}) => {
 
 const root = document.querySelector('.app-wrapper');
 const content = document.querySelector('#main-content');
-
+console.log(content.innerHTML);
 render(<App content={content.innerHTML}/>, root);
