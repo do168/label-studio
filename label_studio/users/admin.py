@@ -10,6 +10,8 @@ from projects.models import Project
 from ml.models import MLBackend, MLBackendTrainJob
 from tasks.models import Task, Annotation, Prediction
 from organizations.models import Organization, OrganizationMember
+from schs.models import Sch, SchMember
+
 
 
 class UserAdminShort(UserAdmin):
@@ -35,6 +37,8 @@ admin.site.register(Annotation)
 admin.site.register(Prediction)
 admin.site.register(Organization)
 admin.site.register(OrganizationMember)
+admin.site.register(Sch)
+admin.site.register(SchMember)
 
 # remove unused django groups
 admin.site.unregister(Group)

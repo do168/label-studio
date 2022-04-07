@@ -245,6 +245,7 @@ class MLBackendInteractiveAnnotating(APIView):
         serializer.is_valid(raise_exception=True)
         validated_data = serializer.validated_data
 
+
         task = get_object_with_check_and_log(request, Task, pk=validated_data['task'], project=ml_backend.project)
         context = validated_data.get('context')
 

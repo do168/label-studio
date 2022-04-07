@@ -20,6 +20,11 @@ logger = logging.getLogger(__name__)
 
 
 class AllPermissions(BaseModel):
+    schs_create = 'schs.create'
+    schs_view = 'schs.view'
+    schs_change = 'schs.change'
+    schs_delete = 'schs.delete'
+    schs_invite = 'schs.invite'
     organizations_create = 'organizations.create'
     organizations_view = 'organizations.view'
     organizations_change = 'organizations.change'

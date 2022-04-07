@@ -176,6 +176,7 @@ INSTALLED_APPS = [
     'drf_generators',
     'core',
     'users',
+    'schs',
     'organizations',
     'data_import',
     'data_export',
@@ -398,12 +399,16 @@ VERSION_EDITION = 'Community Edition'
 LATEST_VERSION_CHECK = True
 VERSIONS_CHECK_TIME = 0
 ALLOW_ORGANIZATION_WEBHOOKS = get_bool_env('ALLOW_ORGANIZATION_WEBHOOKS', False)
+ALLOW_SCH_WEBHOOKS = get_bool_env('ALLOW_SCH_WEBHOOKS', False)
+
 CONVERTER_DOWNLOAD_RESOURCES = get_bool_env('CONVERTER_DOWNLOAD_RESOURCES', True)
 EXPERIMENTAL_FEATURES = get_bool_env('EXPERIMENTAL_FEATURES', False)
 USE_ENFORCE_CSRF_CHECKS = get_bool_env('USE_ENFORCE_CSRF_CHECKS', True)  # False is for tests
 CLOUD_FILE_STORAGE_ENABLED = False
 
 CREATE_ORGANIZATION = 'organizations.functions.create_organization'
+CREATE_SCH = 'schs.functions.create_sch'
+
 GET_OBJECT_WITH_CHECK_AND_LOG = 'core.utils.get_object.get_object_with_check_and_log'
 SAVE_USER = 'users.functions.save_user'
 USER_SERIALIZER = 'users.serializers.BaseUserSerializer'
@@ -419,6 +424,7 @@ PROJECT_MIXIN = 'core.mixins.DummyModelMixin'
 TASK_MIXIN = 'tasks.mixins.TaskMixin'
 ANNOTATION_MIXIN = 'core.mixins.DummyModelMixin'
 ORGANIZATION_MIXIN = 'core.mixins.DummyModelMixin'
+SCH_MIXIN = 'core.mixins.DummyModelMixin'
 USER_MIXIN = 'users.mixins.UserMixin'
 GET_STORAGE_LIST = 'io_storages.functions.get_storage_list'
 STORAGE_ANNOTATION_SERIALIZER = 'io_storages.serializers.StorageAnnotationSerializer'
@@ -446,6 +452,7 @@ WEBHOOK_SERIALIZERS = {
     'project': 'webhooks.serializers_for_hooks.ProjectWebhookSerializer',
     'task': 'webhooks.serializers_for_hooks.TaskWebhookSerializer',
     'annotation': 'webhooks.serializers_for_hooks.AnnotationWebhookSerializer',
+    'schedule': 'webhooks.serializers_for_hooks.ScheduleWebhookSerializer',
 }
 
 EDITOR_KEYMAP = json.dumps(get_env("EDITOR_KEYMAP"))

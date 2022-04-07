@@ -12,7 +12,7 @@ def test_active_organization_filled(business_client):
 
 @pytest.mark.django_db
 def test_api_list_organizations(business_client):
-    response = business_client.get('/api/organizations/')
+    response = business_client.get('/api/schs/')
     response_data = response.json()
     assert len(response_data) == 1
     assert response_data[0]['id'] == business_client.organization.id

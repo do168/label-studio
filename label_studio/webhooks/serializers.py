@@ -15,6 +15,7 @@ class WebhookSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'organization',
+            'sch',
             'project',
             'url',
             'send_payload',

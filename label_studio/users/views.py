@@ -15,6 +15,8 @@ from core.middleware import enforce_csrf_checks
 from users.functions import proceed_registration
 from organizations.models import Organization
 from organizations.forms import OrganizationSignupForm
+from schs.models import Sch
+from schs.forms import SchSignupForm
 
 
 logger = logging.getLogger()
@@ -41,6 +43,7 @@ def user_signup(request):
     next_page = next_page if next_page else reverse('projects:project-index')
     user_form = forms.UserSignupForm()
     organization_form = OrganizationSignupForm()
+    sch_form = SchSignupForm()
 
     if user.is_authenticated:
         return redirect(next_page)
@@ -48,12 +51,14 @@ def user_signup(request):
     # make a new user
     if request.method == 'POST':
         organization = Organization.objects.first()
+        sch = Sch.objects.first()
         if settings.DISABLE_SIGNUP_WITHOUT_LINK is True:
             if not(token and organization and token == organization.token):
                 raise PermissionDenied()
 
         user_form = forms.UserSignupForm(request.POST)
         organization_form = OrganizationSignupForm(request.POST)
+        sch_form = SchSignupForm(request.POST)
 
         if user_form.is_valid():
             redirect_response = proceed_registration(request, user_form, organization_form, next_page)
@@ -89,8 +94,10 @@ def user_login(request):
 
             # user is organization member
             org_pk = Organization.find_by_user(user).pk
+            sch_pk = Sch.find_by_user(user).pk
             user.active_organization_id = org_pk
-            user.save(update_fields=['active_organization'])
+            user.active_sch_id = sch_pk
+            user.save(update_fields=['active_organization', 'active_sch'])
             return redirect(next_page)
 
     return render(request, 'users/user_login.html', {

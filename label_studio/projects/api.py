@@ -44,6 +44,8 @@ from core.utils.io import find_dir, find_file, read_yaml
 from data_manager.functions import get_prepared_queryset, filters_ordering_selected_items_exist
 from data_manager.models import View
 
+from data_import.api import ImportAPI
+
 logger = logging.getLogger(__name__)
 
 _result_schema = openapi.Schema(
@@ -152,8 +154,6 @@ class ProjectListAPI(generics.ListCreateAPIView):
 
     @api_webhook(WebhookAction.PROJECT_CREATED)
     def post(self, request, *args, **kwargs):
-        logger.error(type(request))
-        logger.error(request.data)
         return super(ProjectListAPI, self).post(request, *args, **kwargs)
 
 
@@ -735,28 +735,49 @@ class TritonApi(generics.ListCreateAPIView):
         return context
 
     def post(self, request, *args, **kwargs):
-        project_list_api = ProjectListAPI()
         title = "Created from Auto-labeling"
         label_config = '''<View><Image name="image" value="$image"/><RectangleLabels name="label" 
         toName="image"><Label value="obj" background="#FFA39E"/></RectangleLabels></View> '''
-        # self.request['data'] = self.request['data'].replace({"title" : title, "label_config" : label_config})
-        logger.error(request.data)
 
-        # datas = {'data': {}}
-        # datas['data']['title'] = title
-        # datas['data']['label_config'] = label_config
+        from label_studio_sdk import Client
+        LABEL_STUDIO_URL = 'http://localhost:8080'
+        API_KEY = '44712f3be85d4107d9ffa002b63f7cbc673200ed'
+        ls = Client(url=LABEL_STUDIO_URL, api_key=API_KEY)
+        ls.check_connection()
+        project = ls.start_project(
+            title=title,
+            label_config=label_config
+        )
 
-        # datas = dict(data=dict(title=title, label_config=label_config))
+        # request.data.update({"title": title, "label_config": label_config})
+        # data = super(TritonApi, self).post(request, *args, **kwargs)
+        project_id = project.params['id']
 
-        request.data.update({"title": title, "label_config": label_config})
-        project_request_data = {'data': {'title': title, 'label_config': label_config}}
-
-        # data = project_list_api.post(request, args, kwargs)
-        data = super(TritonApi, self).post(request, *args, **kwargs)
-        project_id = data.data.get('id')
-        print(project_id)
-
-        request.data.update({'data': {'image': '/data/local-files/?d=test/273275,5f45d0002d92d1b5.jpg'},
+        # request.data.update({'data': {'image': '/data/local-files/?d=person_det/person_det_0015.jpg'},
+        #     'annotations': [{
+        #         'result': [{
+        #             "original_width": 480,
+        #             "original_height": 717,
+        #             "image_rotation": 0,
+        #             "value": {
+        #                 "x": 6.25,
+        #                 "y": 43.793584379358435,
+        #                 "width": 77.29166666666667,
+        #                 "height": 39.05160390516039,
+        #                 "rotation": 0,
+        #                 "rectanglelabels": [
+        #                     "Car"
+        #                 ]
+        #             },
+        #             'from_name': 'label',
+        #             'to_name': 'image',
+        #             'type': 'rectanglelabels',
+        #             'origin': 'prediction'
+        #         }],
+        #         'score': 0.87
+        #     }]})
+        tasks = [{
+            'data': {'image': '/data/local-files/?d=person_det/person_det_0015.jpg'},
             'annotations': [{
                 'result': [{
                     "original_width": 480,
@@ -778,107 +799,10 @@ class TritonApi(generics.ListCreateAPIView):
                     'origin': 'prediction'
                 }],
                 'score': 0.87
-            }]})
+            }]
+        }]
+        project.import_tasks(tasks)
         # task_api = ImportAPI()
-        # task_api.post(request, *args, pk=project_id)
+        # task_api.post_auto(request, args, pk=project_id)
 
-        return data
-
-# import time
-# from core.utils.params import list_of_strings_from_request, bool_from_request
-# from label_studio.data_import.uploader import load_tasks
-#
-# class ImportAPI(generics.CreateAPIView):
-#     permission_required = all_permissions.projects_change
-#     parser_classes = (JSONParser, MultiPartParser, FormParser)
-#     serializer_class = ImportApiSerializer
-#     queryset = Task.objects.all()
-#
-#     def get_serializer_context(self):
-#         project_id = self.kwargs.get('pk')
-#         if project_id:
-#             project = generics.get_object_or_404(Project.objects.for_user(self.request.user), pk=project_id)
-#         else:
-#             project = None
-#         return {'project': project, 'user': self.request.user}
-#
-#     def post(self, *args, **kwargs):
-#         return super(ImportAPI, self).post(*args, **kwargs)
-#
-#     def _save(self, tasks):
-#         serializer = self.get_serializer(data=tasks, many=True)
-#         serializer.is_valid(raise_exception=True)
-#         task_instances = serializer.save(project_id=self.kwargs['pk'])
-#         project = generics.get_object_or_404(Project.objects.for_user(self.request.user), pk=self.kwargs['pk'])
-#         emit_webhooks_for_instance(self.request.user.active_organization, project, WebhookAction.TASKS_CREATED, task_instances)
-#         return task_instances, serializer
-#
-#     def _reformat_predictions(self, tasks, preannotated_from_fields):
-#         new_tasks = []
-#         for task in tasks:
-#             if 'data' in task:
-#                 task = task['data']
-#             predictions = [{'result': task.pop(field)} for field in preannotated_from_fields]
-#             new_tasks.append({
-#                 'data': task,
-#                 'predictions': predictions
-#             })
-#         return new_tasks
-#
-#     def create(self, request, *args, **kwargs):
-#         start = time.time()
-#         commit_to_project = bool_from_request(request.query_params, 'commit_to_project', True)
-#         return_task_ids = bool_from_request(request.query_params, 'return_task_ids', False)
-#         preannotated_from_fields = list_of_strings_from_request(request.query_params, 'preannotated_from_fields', None)
-#
-#         # check project permissions
-#         project = generics.get_object_or_404(Project.objects.for_user(self.request.user), pk=self.kwargs['pk'])
-#
-#         # upload files from request, and parse all tasks
-#         parsed_data, file_upload_ids, could_be_tasks_lists, found_formats, data_columns = load_tasks(request, project)
-#
-#         if preannotated_from_fields:
-#             # turn flat task JSONs {"column1": value, "column2": value} into {"data": {"column1"..}, "predictions": [{..."column2"}]  # noqa
-#             parsed_data = self._reformat_predictions(parsed_data, preannotated_from_fields)
-#
-#         if commit_to_project:
-#             # Immediately create project tasks and update project states and counters
-#             tasks, serializer = self._save(parsed_data)
-#             task_count = len(tasks)
-#             annotation_count = len(serializer.db_annotations)
-#             prediction_count = len(serializer.db_predictions)
-#             # Update tasks states if there are related settings in project
-#             # after bulk create we can bulk update tasks stats with
-#             # flag_update_stats=True but they are already updated with signal in same transaction
-#             # so just update tasks_number_changed
-#             project.update_tasks_states(
-#                 maximum_annotations_changed=False,
-#                 overlap_cohort_percentage_changed=False,
-#                 tasks_number_changed=True
-#             )
-#             logger.info('Tasks bulk_update finished')
-#
-#             project.summary.update_data_columns(parsed_data)
-#             # TODO: project.summary.update_created_annotations_and_labels
-#         else:
-#             # Do nothing - just output file upload ids for further use
-#             task_count = len(parsed_data)
-#             annotation_count = None
-#             prediction_count = None
-#
-#         duration = time.time() - start
-#
-#         response = {
-#             'task_count': task_count,
-#             'annotation_count': annotation_count,
-#             'prediction_count': prediction_count,
-#             'duration': duration,
-#             'file_upload_ids': file_upload_ids,
-#             'could_be_tasks_list': could_be_tasks_lists,
-#             'found_formats': found_formats,
-#             'data_columns': data_columns
-#         }
-#         if return_task_ids:
-#             response['task_ids'] = [task.id for task in tasks]
-#
-#         return Response(response, status=status.HTTP_201_CREATED)
+        return Response(project.params, status=status.HTTP_201_CREATED, headers=project.headers)

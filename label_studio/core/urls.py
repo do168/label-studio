@@ -53,8 +53,7 @@ urlpatterns = [
     re_path(r'^static/fonts/roboto/roboto.css$', views.static_file_with_host_resolver('static/fonts/roboto/roboto.css', content_type='text/css')),
     re_path(r'^static/(?P<path>.*)$', serve, kwargs={'document_root': settings.STATIC_ROOT, 'show_indexes': True}),
 
-
-
+    re_path(r'^', include('schs.urls')),
     re_path(r'^', include('organizations.urls')),
     re_path(r'^', include('projects.urls')),
     re_path(r'^', include('data_import.urls')),

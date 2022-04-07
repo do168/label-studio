@@ -13,6 +13,7 @@ from django.db.models.signals import post_save
 from rest_framework.authtoken.models import Token
 
 from organizations.models import OrganizationMember, Organization
+from schs.models import SchMember, Sch
 from users.functions import hash_upload
 from core.utils.common import load_func
 from projects.models import Project
@@ -103,6 +104,8 @@ class User(UserMixin, AbstractBaseUser, PermissionsMixin, UserLastActivityMixin)
 
     active_organization = models.ForeignKey('organizations.Organization', on_delete=models.SET_NULL, related_name='active_users', null=True)
 
+    active_sch = models.ForeignKey('schs.Sch', on_delete=models.SET_NULL, related_name='active_users', null=True)
+
     objects = UserManager()
 
     EMAIL_FIELD = 'email'
@@ -146,6 +149,24 @@ class User(UserMixin, AbstractBaseUser, PermissionsMixin, UserLastActivityMixin)
     @property
     def has_organization(self):
         return Organization.objects.filter(created_by=self).exists()
+
+    def is_sch_admin(self, sch_pk):
+        return True
+
+    def active_sch_annotations(self):
+        return self.annotations.filter(task__project__sch=self.active_sch)
+
+    def active_sch_contributed_project_number(self):
+        annotations = self.active_sch_annotations()
+        return annotations.values_list('task__project').distinct().count()
+
+    @property
+    def own_sch(self):
+        return Sch.objects.get(created_by=self)
+
+    @property
+    def has_sch(self):
+        return Sch.objects.filter(created_by=self).exists()
 
     def clean(self):
         super().clean()

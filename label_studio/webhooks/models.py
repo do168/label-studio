@@ -32,6 +32,8 @@ class Webhook(models.Model):
 
     organization = models.ForeignKey('organizations.Organization', on_delete=models.CASCADE, related_name='webhooks')
 
+    sch = models.ForeignKey('schs.Sch', on_delete=models.CASCADE, related_name='webhooks')
+
     project = models.ForeignKey(
         'projects.Project', null=True, on_delete=models.CASCADE, related_name='webhooks', default=None
     )
@@ -102,6 +104,7 @@ class WebhookAction(models.Model):
     ANNOTATION_CREATED = 'ANNOTATION_CREATED'
     ANNOTATION_UPDATED = 'ANNOTATION_UPDATED'
     ANNOTATIONS_DELETED = 'ANNOTATIONS_DELETED'
+
 
     ACTIONS = {
         PROJECT_CREATED: {

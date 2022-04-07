@@ -31,6 +31,7 @@ class BaseUserSerializer(serializers.ModelSerializer):
             'initials',
             'phone',
             'active_organization',
+            'active_sch'
         )
 
 

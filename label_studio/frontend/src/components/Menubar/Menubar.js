@@ -189,6 +189,14 @@ export const Menubar = ({
                   exact
                 />
 
+                <Menu.Item
+                  label="Schedule"
+                  to="/sch"
+                  icon={<IconPersonInCircle/>}
+                  data-external
+                  exact
+                />
+
                 <Menu.Spacer/>
 
                 <VersionNotifier showNewVersion/>

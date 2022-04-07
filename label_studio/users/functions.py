@@ -10,6 +10,8 @@ from django.urls import reverse
 from django.core.files.images import get_image_dimensions
 
 from organizations.models import Organization
+from schs.models import Sch
+
 from core.utils.common import load_func
 
 
@@ -59,8 +61,16 @@ def save_user(request, next_page, user_form):
         org.add_user(user)
     else:
         org = Organization.create_organization(created_by=user, title='Label Studio')
+
+    if Sch.objects.exists():
+        s = Sch.objects.first()
+        s.add_user(user)
+    else:
+        s = Sch.create_sch(created_by=user, title='sch test')
+
     user.active_organization = org
-    user.save(update_fields=['active_organization'])
+    user.active_sch = s
+    user.save(update_fields=['active_organization', 'active_sch'])
 
     redirect_url = next_page if next_page else reverse('projects:project-index')
     auth.login(request, user, backend='django.contrib.auth.backends.ModelBackend')

@@ -175,6 +175,12 @@ class ImportAPI(generics.CreateAPIView):
     def post(self, *args, **kwargs):
         return super(ImportAPI, self).post(*args, **kwargs)
 
+    def post_auto(self, request, *args, **kwagrs):
+        self.request = request
+        self.args = args
+        self.kwargs = kwagrs
+        return super(ImportAPI, self).post(request, *args, **kwagrs)
+
     def _save(self, tasks):
         serializer = self.get_serializer(data=tasks, many=True)
         serializer.is_valid(raise_exception=True)
@@ -196,6 +202,8 @@ class ImportAPI(generics.CreateAPIView):
         return new_tasks
 
     def create(self, request, *args, **kwargs):
+        logger.error(self.request.query_params)
+        logger.error(self.request)
         start = time.time()
         commit_to_project = bool_from_request(request.query_params, 'commit_to_project', True)
         return_task_ids = bool_from_request(request.query_params, 'return_task_ids', False)

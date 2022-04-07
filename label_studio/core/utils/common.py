@@ -500,6 +500,22 @@ def get_organization_from_request(request):
         return user.active_organization_id
 
 
+def get_sch_from_request(request):
+    """Helper for backward compatability with org_pk in session """
+    # TODO remove session logic in next release
+    user = request.user
+    if user and user.is_authenticated:
+        if user.active_sch is None:
+            sch_pk = request.session.get('sch_pk')
+            if sch_pk:
+                user.active_sch_id = sch_pk
+                user.save()
+                request.session.pop('sch_pk', None)
+                request.session.modified = True
+        return user.active_sch_id
+
+
+
 def load_func(func_string):
     """
     If the given setting is a string import notation,
