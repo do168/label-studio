@@ -51,7 +51,17 @@ class Sch(SchMixin, models.Model):
     """
     title = models.CharField(_('sch title'), max_length=1000, null=False)
 
-    token = models.CharField(_('token'), max_length=256, default=create_hash, unique=True, null=True, blank=True)
+    # dataset = models.CharField(_('sch dataset'), max_length=1000, null=False)
+
+    # token = models.CharField(_('token'), max_length=256, default=create_hash, unique=True, null=True, blank=True)
+
+    # inference_model = models.CharField(_('inference model'), max_length=100, null=False)
+    #
+    # period = models.CharField(_('period'), max_length=100, null=False)
+    #
+    # tmp_auto_remove = models.BooleanField(_('tmp_auto_remove'), default=False)
+    #
+    # project_auto_create = models.BooleanField(_('project_auto_create'), default=False)
 
     users = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name="schs", through=SchMember)
         
@@ -84,13 +94,13 @@ class Sch(SchMixin, models.Model):
             raise ValueError(f'No memberships found for user {user}')
         return memberships.first().sch
 
-    @classmethod
-    def find_by_invite_url(cls, url):
-        token = url.strip('/').split('/')[-1]
-        if len(token):
-            return Sch.objects.get(token=token)
-        else:
-            raise KeyError(f'Can\'t find Sch by welcome URL: {url}')
+    # @classmethod
+    # def find_by_invite_url(cls, url):
+    #     token = url.strip('/').split('/')[-1]
+    #     if len(token):
+    #         return Sch.objects.get(token=token)
+    #     else:
+    #         raise KeyError(f'Can\'t find Sch by welcome URL: {url}')
 
     def has_user(self, user):
         return self.users.filter(pk=user.pk).exists()
@@ -114,10 +124,6 @@ class Sch(SchMixin, models.Model):
 
             return om    
     
-    def reset_token(self):
-        self.token = create_hash()
-        self.save()
-
     def check_max_projects(self):
         """This check raise an exception if the projects limit is hit
         """

@@ -30,8 +30,4 @@ urlpatterns = [
 
     path('people/', include(_urlpatterns)),
     path('api/schs/', include((_api_urlpattens, app_name), namespace='api')),
-
-    # invite
-    path('api/invite', api.SchInviteAPI.as_view(), name='sch-reset-token'),
-    path('api/invite/reset-token', api.SchResetTokenAPI.as_view(), name='sch-reset-token'),
 ]

@@ -49,18 +49,22 @@ def check_avatar(files):
     return avatar
 
 
-def save_user(request, next_page, user_form):
+def save_user(request, next_page, user_form, organization_token):
     """ Save user instance to DB
     """
     user = user_form.save()
     user.username = user.email.split('@')[0]
     user.save()
 
-    if Organization.objects.exists():
-        org = Organization.objects.first()
-        org.add_user(user)
-    else:
-        org = Organization.create_organization(created_by=user, title='Label Studio')
+    org = Organization.objects.filter(token=organization_token).first()
+    org.add_user(user)
+
+    # if Organization.objects.exists():
+    #     org = Organization.objects.first()
+    #     org = Organization.create_organization(created_by=user, title='Label Studio2')
+    #     org.add_user(user)
+    # else:
+    #     org = Organization.create_organization(created_by=user, title='Label Studio')
 
     if Sch.objects.exists():
         s = Sch.objects.first()
@@ -77,11 +81,11 @@ def save_user(request, next_page, user_form):
     return redirect(redirect_url)
 
 
-def proceed_registration(request, user_form, organization_form, next_page):
+def proceed_registration(request, user_form, organization_form, next_page, organization_token):
     """ Register a new user for POST user_signup
     """
     # save user to db
     save_user = load_func(settings.SAVE_USER)
-    response = save_user(request, next_page, user_form)
+    response = save_user(request, next_page, user_form, organization_token)
 
     return response

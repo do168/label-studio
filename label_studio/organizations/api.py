@@ -102,7 +102,10 @@ class OrganizationMemberListAPI(generics.ListAPIView):
         }
 
     def get_queryset(self):
-        org = generics.get_object_or_404(self.request.user.organizations, pk=self.kwargs[self.lookup_field])
+        # org = generics.get_object_or_404(self.request.user.organizations, pk=self.kwargs[self.lookup_field])
+        print(self.request.user.active_organization.id)
+        print(self.kwargs[self.lookup_field])
+        org = generics.get_object_or_404(self.request.user.organizations, pk=self.request.user.active_organization.id)
         return org.members.order_by('user__username')
 
 

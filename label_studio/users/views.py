@@ -52,16 +52,20 @@ def user_signup(request):
     if request.method == 'POST':
         organization = Organization.objects.first()
         sch = Sch.objects.first()
-        if settings.DISABLE_SIGNUP_WITHOUT_LINK is True:
-            if not(token and organization and token == organization.token):
-                raise PermissionDenied()
+        # if settings.DISABLE_SIGNUP_WITHOUT_LINK is True:
+        print(token, organization.token)
+            # if not(token and organization and token == organization.token):
+                # raise PermissionDenied()
 
         user_form = forms.UserSignupForm(request.POST)
         organization_form = OrganizationSignupForm(request.POST)
         sch_form = SchSignupForm(request.POST)
 
+        if not token:
+            token = organization.token
+
         if user_form.is_valid():
-            redirect_response = proceed_registration(request, user_form, organization_form, next_page)
+            redirect_response = proceed_registration(request, user_form, organization_form, next_page, token)
             if redirect_response:
                 return redirect_response
 
@@ -92,12 +96,13 @@ def user_login(request):
             user = form.cleaned_data['user']
             auth.login(request, user, backend='django.contrib.auth.backends.ModelBackend')
 
+            # TODO: Why this code used?
             # user is organization member
-            org_pk = Organization.find_by_user(user).pk
-            sch_pk = Sch.find_by_user(user).pk
-            user.active_organization_id = org_pk
-            user.active_sch_id = sch_pk
-            user.save(update_fields=['active_organization', 'active_sch'])
+            # org_pk = Organization.find_by_user(user).pk
+            # sch_pk = Sch.find_by_user(user).pk
+            # user.active_organization_id = org_pk
+            # user.active_sch_id = sch_pk
+            # user.save(update_fields=['active_organization', 'active_sch'])
             return redirect(next_page)
 
     return render(request, 'users/user_login.html', {

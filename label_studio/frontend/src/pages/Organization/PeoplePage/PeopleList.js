@@ -20,7 +20,7 @@ export const PeopleList = ({ onSelect, selectedUser, defaultSelected }) => {
   const fetchUsers = useCallback(async (page, pageSize) => {
     const response = await api.callApi('memberships', {
       params: {
-        pk: 1,
+        pk: 2,
         contributed_to_projects: 1,
         page,
         page_size: pageSize,
