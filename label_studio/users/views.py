@@ -43,7 +43,6 @@ def user_signup(request):
     next_page = next_page if next_page else reverse('projects:project-index')
     user_form = forms.UserSignupForm()
     organization_form = OrganizationSignupForm()
-    sch_form = SchSignupForm()
 
     if user.is_authenticated:
         return redirect(next_page)
@@ -51,18 +50,17 @@ def user_signup(request):
     # make a new user
     if request.method == 'POST':
         organization = Organization.objects.first()
-        sch = Sch.objects.first()
         # if settings.DISABLE_SIGNUP_WITHOUT_LINK is True:
-        print(token, organization.token)
             # if not(token and organization and token == organization.token):
                 # raise PermissionDenied()
 
         user_form = forms.UserSignupForm(request.POST)
         organization_form = OrganizationSignupForm(request.POST)
-        sch_form = SchSignupForm(request.POST)
 
         if not token:
             token = organization.token
+
+        print(token, organization.token)
 
         if user_form.is_valid():
             redirect_response = proceed_registration(request, user_form, organization_form, next_page, token)
@@ -101,8 +99,7 @@ def user_login(request):
             # org_pk = Organization.find_by_user(user).pk
             # sch_pk = Sch.find_by_user(user).pk
             # user.active_organization_id = org_pk
-            # user.active_sch_id = sch_pk
-            # user.save(update_fields=['active_organization', 'active_sch'])
+            # user.save(update_fields=['active_organization'])
             return redirect(next_page)
 
     return render(request, 'users/user_login.html', {

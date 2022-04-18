@@ -191,7 +191,7 @@ export const Menubar = ({
 
                 <Menu.Item
                   label="Schedule"
-                  to="/sch"
+                  to="/schs"
                   icon={<IconPersonInCircle/>}
                   data-external
                   exact

@@ -5,10 +5,12 @@ import logging
 from django.urls import reverse
 from django.conf import settings
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
-from rest_framework import generics
+from rest_framework import generics, filters
+from django.db import IntegrityError
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
+from core.utils.exceptions import ProjectExistException, LabelStudioDatabaseException
 
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
@@ -19,11 +21,17 @@ from label_studio.core.utils.common import get_object_with_check_and_log, bool_f
 
 from schs.models import Sch
 from schs.serializers import (
-    SchSerializer, SchIdSerializer, SchMemberUserSerializer, SchInviteSerializer
+    SchSerializer
 )
 
 
 logger = logging.getLogger(__name__)
+
+
+
+class SchListPagination(PageNumberPagination):
+    page_size = 30
+    page_size_query_param = 'page_size'
 
 
 @method_decorator(name='get', decorator=swagger_auto_schema(
@@ -34,24 +42,32 @@ logger = logging.getLogger(__name__)
         """
     ))
 class SchListAPI(generics.ListCreateAPIView):
-    queryset = Sch.objects.all()
     parser_classes = (JSONParser, FormParser, MultiPartParser)
+    filter_backends = [filters.OrderingFilter]
     permission_required = ViewClassPermission(
         GET=all_permissions.schs_view,
-        PUT=all_permissions.schs_change,
         POST=all_permissions.schs_create,
-        PATCH=all_permissions.schs_change,
-        DELETE=all_permissions.schs_change,
     )
-    serializer_class = SchIdSerializer
+    ordering = ['-created_at']
+    serializer_class = SchSerializer
 
-    def get_object(self):
-        org = get_object_with_check_and_log(self.request, Sch, pk=self.kwargs[self.lookup_field])
-        self.check_object_permissions(self.request, org)
-        return org
+    def get_queryset(self):
+        schs = Sch.objects.filter(organization=self.request.user.active_organization)
+        return schs
 
-    def filter_queryset(self, queryset):
-        return queryset.filter(users=self.request.user).distinct()
+    def get_serializer_context(self):
+        context = super(SchListAPI, self).get_serializer_context()
+        context['created_by'] = self.request.user
+        return context
+
+    def perform_create(self, ser):
+        try:
+            sch = ser.save(organization=self.request.user.active_organization)
+        except IntegrityError as e:
+            if str(e) == 'UNIQUE constraint failed: project.title, project.created_by_id':
+                raise ProjectExistException('Sch with the same name already exists: {}'.
+                                            format(ser.validated_data.get('title', '')))
+            raise LabelStudioDatabaseException('Database error during project creation. Try again.')
 
     def get(self, request, *args, **kwargs):
         return super(SchListAPI, self).get(request, *args, **kwargs)
@@ -70,40 +86,6 @@ class SchMemberPagination(PageNumberPagination):
         if self.page_size_query_param in request.query_params and request.query_params[self.page_size_query_param] == '-1':
             return 1000000
         return super().get_page_size(request)
-
-
-@method_decorator(name='get', decorator=swagger_auto_schema(
-        tags=['Schs'],
-        operation_summary='Get schs members list',
-        operation_description='Retrieve a list of the schs members and their IDs.',
-        manual_parameters=[
-            openapi.Parameter(
-                name='id',
-                type=openapi.TYPE_INTEGER,
-                in_=openapi.IN_PATH,
-                description='A unique integer value identifying this schs.'),
-        ],
-    ))
-class SchMemberListAPI(generics.ListAPIView):
-
-    parser_classes = (JSONParser, FormParser, MultiPartParser)
-    permission_required = ViewClassPermission(
-        GET=all_permissions.schs_view,
-        PUT=all_permissions.schs_change,
-        PATCH=all_permissions.schs_change,
-        DELETE=all_permissions.schs_change,
-    )
-    serializer_class = SchMemberUserSerializer
-    pagination_class = SchMemberPagination
-
-    def get_serializer_context(self):
-        return {
-            'contributed_to_projects': bool_from_request(self.request.GET, 'contributed_to_projects', False)
-        }
-
-    def get_queryset(self):
-        org = generics.get_object_or_404(self.request.user.schs, pk=self.kwargs[self.lookup_field])
-        return org.members.order_by('user__username')
 
 
 @method_decorator(name='get', decorator=swagger_auto_schema(

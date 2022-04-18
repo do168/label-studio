@@ -21,7 +21,6 @@ _urlpatterns = [
 _api_urlpatterns = [
     # CRUD
     path('', api.ProjectListAPI.as_view(), name='project-list'),
-    path('auto', api.TritonApi.as_view(), name='project-auto'),
     path('<int:pk>/', api.ProjectAPI.as_view(), name='project-detail'),
 
     # Get next task

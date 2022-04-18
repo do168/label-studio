@@ -5,9 +5,9 @@ from django.contrib.auth.decorators import login_required
 
 
 @login_required
-def sch_people_list(request):
-    return render(request, 'schs/people_list.html')
+def sch_list(request):
+    return render(request, 'schs/list.html')
 
 @login_required
 def simple_view(request):
-    return render(request, 'schs/people_list.html')
+    return render(request, 'schs/list.html')

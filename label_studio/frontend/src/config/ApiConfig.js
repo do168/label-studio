@@ -11,7 +11,8 @@ export const API_CONFIG = {
     inviteLink: "/invite",
     resetInviteLink: "POST:/invite/reset-token",
 
-     // Organization
+     // Sch
+    schs: "/schs",
     membershipsSch: "/schs/:pk/memberships",
 
     // Project

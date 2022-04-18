@@ -30,8 +30,7 @@ class BaseUserSerializer(serializers.ModelSerializer):
             'avatar',
             'initials',
             'phone',
-            'active_organization',
-            'active_sch'
+            'active_organization'
         )
 
 

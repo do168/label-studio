@@ -30,7 +30,7 @@ if (ALLOW_SCH_WEBHOOKS){
 
 export const SchPage = {
   title: "Schs",
-  path: "/sch",
+  path: "/schs",
   exact: true,
   layout: MenuLayout,
   component: PeoplePage,
