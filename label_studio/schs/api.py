@@ -28,12 +28,6 @@ from schs.serializers import (
 logger = logging.getLogger(__name__)
 
 
-
-class SchListPagination(PageNumberPagination):
-    page_size = 30
-    page_size_query_param = 'page_size'
-
-
 @method_decorator(name='get', decorator=swagger_auto_schema(
         tags=['Schs'],
         operation_summary='List your schs',

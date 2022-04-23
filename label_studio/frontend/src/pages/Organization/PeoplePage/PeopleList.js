@@ -28,6 +28,7 @@ export const PeopleList = ({ onSelect, selectedUser, defaultSelected }) => {
     });
 
     if (response.results) {
+      console.log(response.results);
       setUsersList(response.results);
       setTotalItems(response.count);
     }

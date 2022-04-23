@@ -82,7 +82,9 @@ export const CreateProject = ({ onClose }) => {
     setWaitingStatus(false);
 
     if (response !== null) {
-      history.push(`/projects/${response.id}/data`);
+      // history.push(`/projects/${response.id}/data`);
+      history.push("/projects");
+      onClose?.();
     }
   }, [project, projectBody, finishUpload]);
 

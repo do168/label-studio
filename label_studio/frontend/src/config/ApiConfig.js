@@ -13,6 +13,7 @@ export const API_CONFIG = {
 
      // Sch
     schs: "/schs",
+    createSch: "POST:/schs",
     membershipsSch: "/schs/:pk/memberships",
 
     // Project

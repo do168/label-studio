@@ -50,7 +50,7 @@ class Sch(SchMixin, models.Model):
     )
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        related_name='created_sch',
+        related_name='created_schs',
         on_delete=models.SET_NULL,
         null=True,
         verbose_name=_('created by'),
@@ -71,6 +71,11 @@ class Sch(SchMixin, models.Model):
     def __str__(self):
         return self.title + ', id=' + str(self.pk)
 
+    def __init__(self, *args, **kwargs):
+        super(Sch, self).__init__(*args, **kwargs)
+
+    class Meta:
+        db_table = 'sch'
 
 class SchMember(models.Model):
 

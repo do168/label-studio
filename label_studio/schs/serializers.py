@@ -6,11 +6,20 @@ from rest_framework import serializers
 from drf_dynamic_fields import DynamicFieldsMixin
 
 from schs.models import Sch, SchMember
-from users.serializers import UserSerializer
+from users.serializers import UserSimpleSerializer
 from collections import OrderedDict
 
 
+class CreatedByFromContext:
+    requires_context = True
+
+    def __call__(self, serializer_field):
+        return serializer_field.context.get('created_by')
+
+
 class SchSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+    created_by = UserSimpleSerializer(default=CreatedByFromContext())
+
     class Meta:
         model = Sch
         fields = '__all__'
