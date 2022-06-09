@@ -146,6 +146,8 @@ class ExportAPI(generics.RetrieveAPIView):
         return queryset
 
     def get(self, request, *args, **kwargs):
+        if not request.user.is_staff:
+            return HttpResponse(status=403)
         project = self.get_object()
         export_type = (
             request.GET.get('exportType', 'JSON')

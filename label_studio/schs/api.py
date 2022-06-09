@@ -23,18 +23,19 @@ from schs.models import Sch
 from schs.serializers import (
     SchSerializer
 )
-
+from projects.models import Project
+from ml.models import MLBackend
 
 logger = logging.getLogger(__name__)
 
 
 @method_decorator(name='get', decorator=swagger_auto_schema(
-        tags=['Schs'],
-        operation_summary='List your schs',
-        operation_description="""
+    tags=['Schs'],
+    operation_summary='List your schs',
+    operation_description="""
         Return a list of the schs you've created or that you have access to.
         """
-    ))
+))
 class SchListAPI(generics.ListCreateAPIView):
     parser_classes = (JSONParser, FormParser, MultiPartParser)
     filter_backends = [filters.OrderingFilter]
@@ -49,6 +50,10 @@ class SchListAPI(generics.ListCreateAPIView):
         schs = Sch.objects.filter(organization=self.request.user.active_organization)
         return schs
 
+    def get_queryset_all(self):
+        schs = Sch.objects.all()
+        return schs
+
     def get_serializer_context(self):
         context = super(SchListAPI, self).get_serializer_context()
         context['created_by'] = self.request.user
@@ -56,7 +61,10 @@ class SchListAPI(generics.ListCreateAPIView):
 
     def perform_create(self, ser):
         try:
-            sch = ser.save(organization=self.request.user.active_organization)
+            logger.error(self.request.data)
+            project = Project.objects.get(id=int(self.request.data['project']))
+            ml = MLBackend.objects.get(id=int(self.request.data['model']))
+            sch = ser.save(organization=self.request.user.active_organization, project=project, model=ml)
         except IntegrityError as e:
             if str(e) == 'UNIQUE constraint failed: project.title, project.created_by_id':
                 raise ProjectExistException('Sch with the same name already exists: {}'.
@@ -64,7 +72,11 @@ class SchListAPI(generics.ListCreateAPIView):
             raise LabelStudioDatabaseException('Database error during project creation. Try again.')
 
     def get(self, request, *args, **kwargs):
+        logger.error(request)
         return super(SchListAPI, self).get(request, *args, **kwargs)
+
+    def getAll(self):
+        return super(SchListAPI, self).getAll()
 
     @swagger_auto_schema(auto_schema=None)
     def post(self, request, *args, **kwargs):
@@ -77,23 +89,23 @@ class SchMemberPagination(PageNumberPagination):
 
     def get_page_size(self, request):
         # emulate "unlimited" page_size
-        if self.page_size_query_param in request.query_params and request.query_params[self.page_size_query_param] == '-1':
+        if self.page_size_query_param in request.query_params and request.query_params[
+            self.page_size_query_param] == '-1':
             return 1000000
         return super().get_page_size(request)
 
 
 @method_decorator(name='get', decorator=swagger_auto_schema(
-        tags=['Schs'],
-        operation_summary=' Get schs settings',
-        operation_description='Retrieve the settings for a specific schs by ID.'
-    ))
+    tags=['Schs'],
+    operation_summary=' Get schs settings',
+    operation_description='Retrieve the settings for a specific schs by ID.'
+))
 @method_decorator(name='patch', decorator=swagger_auto_schema(
-        tags=['Schs'],
-        operation_summary='Update schs settings',
-        operation_description='Update the settings for a specific schs by ID.'
-    ))
+    tags=['Schs'],
+    operation_summary='Update schs settings',
+    operation_description='Update the settings for a specific schs by ID.'
+))
 class SchAPI(generics.RetrieveUpdateAPIView):
-
     parser_classes = (JSONParser, FormParser, MultiPartParser)
     queryset = Sch.objects.all()
     permission_required = all_permissions.schs_change

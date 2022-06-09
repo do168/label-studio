@@ -254,7 +254,7 @@ def setup_project(client, project_template, do_auth=True):
         with requests_mock.Mocker() as m:
             m.register_uri('POST', re.compile(r'ml\.heartex\.net/\d+/validate'), text=json.dumps({'status': 'ok'}))
             m.register_uri('GET', re.compile(r'ml\.heartex\.net/\d+/health'), text=json.dumps({'status': 'UP'}))
-            r = client.post(urls.project_create, data=project_config)
+            r = post(urls.project_create, data=project_config)
             print('Project create with status code:', r.status_code)
             assert r.status_code == 201, f'Create project result should be redirect to the next page'
 

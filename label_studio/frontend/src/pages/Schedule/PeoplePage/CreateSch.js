@@ -17,11 +17,12 @@ const getCurrentPage = () => {
 };
 
 
-const SchName = ({ name, setName, onSubmit, error, dataset, setDataset, model, setModel, period, setPeriod, handleSelect, projectsList, show = true }) => !show ? null :(
-  <form className={cn("sch-name")} onSubmit={e => { e.preventDefault(); onSubmit(); }}>
+const SchName = ({ name, setName, onSubmit, error, dataset, setDataset, model, setModel, period, setPeriod, handleSelectProject, handleSelectModel, handleSelectPeriod, 
+  projectsList, modelsList, tmpChecked, autoChecked, tempCheckHandler, autoCheckHandler, show = true }) => !show ? null :(
+  <form className={cn("project-name")} onSubmit={e => { e.preventDefault(); onSubmit(); }}>
     <div className="field field--wide">
-      <label htmlFor="sch_name">Sch Name</label>
-      <input name="name" id="sch_name" value={name} onChange={e => setName(e.target.value)} />
+      <label htmlFor="project_name">Sch Name</label>
+      <input name="name" id="project_name" value={name} onChange={e => setName(e.target.value)} />
       {error && <span className="error">{error}</span>}
     </div>
     <div className="field field--wide">
@@ -29,46 +30,65 @@ const SchName = ({ name, setName, onSubmit, error, dataset, setDataset, model, s
       <select 
         id="project_dataset"
         name="dataset"
-        value={dataset}>
+        onChange={e=>handleSelectProject(e)}>
         {
+          
           projectsList.map((item)=>(
-            <option value={item} key={item}>
+            <option value={[item.id, item.title]} key={item.id}>
               {item.title}
             </option>
           ))
         }
       </select>
-      <textarea
-        name="dataset"
-        id="project_dataset"
-        placeholder="dataset of your sch"
-        rows="1"
-        value={dataset}
-        onChange={e => setDataset(e.target.value)}
-      />
     </div>
     <div className="field field--wide">
       <label htmlFor="sch_inference_model">Inference Model</label>
-      <textarea
-        name="inf-model"
-        id="project_inference_model"
-        placeholder="inference model of your sch"
-        rows="1"
-        value={model}
-        onChange={e => setModel(e.target.value)}
-      />
+      <select 
+        id="project_model"
+        name="model"
+        onChange={e=>handleSelectModel(e)}>
+        {
+          modelsList.map((item)=>(
+            <option value={[item.id, item.title]} key={item.id}>
+              {item.title}
+            </option>
+          ))
+        }
+      </select>
     </div>
     <div className="field field--wide">
       <label htmlFor="sch_period">Period</label>
-      <textarea
-        name="period"
-        id="sch_period"
-        placeholder="period of your sch"
-        rows="1"
-        value={period}
-        onChange={e => setPeriod(e.target.value)}
-      />
+      <div style={{display:"flex"}}>
+        <input
+          name="period"
+          id="sch_period"
+          placeholder="period of your sch"
+          rows="1"
+          value={period}
+          onChange={e => setPeriod(e.target.value)}
+          style={{width:"50%", height:"13px"}}
+        />
+        <select 
+          id="project_model"
+          name="model"
+          style={{width:"30%", height:"33px"}}
+          onChange={e=>handleSelectPeriod(e)}>
+            <option value="1">시간
+            </option>
+            <option value="168">주
+            </option>
+            <option value="720">월
+            </option>
+        </select>
+       </div>
     </div>
+    <fieldset>
+      <legend>
+        Group Box
+      </legend>
+      임시폴더 자동삭제 <input type="checkbox" checked={tmpChecked} onChange={e=>tempCheckHandler(e)}></input>수행 후 Target dataset이 지워집니다(data포함)<br></br>
+      프로젝트 자동생성 <input type="checkbox" checked={autoChecked} onChange={e=>autoCheckHandler(e)}></input>수행 후 Label Studio에 자동으로 결과물이 프로젝트에 등록됩니다
+    </fieldset>
   </form>
 );
 
@@ -81,14 +101,22 @@ export const CreateSch = ({ onClose }) => {
 
   const [name, setName] = React.useState("");
   const [error, setError] = React.useState();
+
   const [dataset, setDataset] = React.useState("");
   const [model, setModel] = React.useState("");
+  const [modelId, setModelId] = React.useState("");
   const [period, setPeriod] = React.useState("");
   const [Selected, setSelected] = React.useState("");
+  const [projectId, setProjectId] = React.useState("");
+  const [time, setTime] = React.useState("");
 
   const [projectsList, setProjectsList] = React.useState([]);
+  const [modelsList, setModelsList] = React.useState([]);
   const [currentPage, setCurrentPage] = React.useState(getCurrentPage());
   const [totalItems, setTotalItems] = React.useState(1);
+
+  const [tmpChecked, setTmpChecked] = React.useState(false);
+  const [autoChecked, setAutoChecked] = React.useState(false);
 
   const defaultPageSize = parseInt(localStorage.getItem('pages:projects-list') ?? 30);
 
@@ -107,19 +135,44 @@ export const CreateSch = ({ onClose }) => {
     title: name,
     dataset:dataset,
     inf_model: model,
-    period: period
-  }), [name, dataset, model, period]);
+    period: period,
+    project: projectId,
+    model: modelId,
+  }), [name, dataset, model, period, projectId, modelId]);
+
+  const onRun = React.useCallback(async () => {
+    setWaitingStatus(true);
+    const response = await api.callApi('schMlInteractive', {
+      params: { pk: modelId, projectId: projectId},
+      body: {
+        task: 17,
+      }
+    })
+
+    setWaitingStatus(false);
+    console.log(response);
+    if (response !== null) {
+      history.push(`/projects/${projectId}/data`);
+    }
+  });
 
   const onCreate = React.useCallback(async () => {
     setWaitingStatus(true);
+    const calcPeriod = period*time;
+    console.log(name, dataset, model, period);
     const response = await api.callApi('createSch',{
       body: {
         title: name,
         dataset: dataset,
         inf_model: model,
-        period: period,
+        period: calcPeriod,
+        tmp_auto_remove: tmpChecked,
+        prj_auto_create: autoChecked,
+        project: projectId,
+        model: modelId,
       },
     });
+
     setWaitingStatus(false);
     console.log(response)
     if (response !== null) {
@@ -137,8 +190,17 @@ export const CreateSch = ({ onClose }) => {
     setProjectsList(data.results ?? []);
   };
 
+  const fetchModels = async() => {
+    const data = await api.callApi("mLBackendsList", {
+    })
+    console.log(data);
+
+    setModelsList(data ?? []);
+  };
+
   React.useEffect(() => {
     fetchProjects();
+    fetchModels();
   }, []);
 
   const loadNextPage = async (page, pageSize) => {
@@ -146,8 +208,31 @@ export const CreateSch = ({ onClose }) => {
     await fetchProjects(page, pageSize);
   };
 
-  const handleSelect = (e) => {
-    setSelected(e.target.value);
+  const handleSelectProject = async (e) => {
+    const [tmpId, tmpProjectTitle] = e.target.value.split(",");
+    setProjectId(tmpId);
+    setDataset(tmpProjectTitle);
+  }
+
+  const handleSelectModel = (e) => {
+    console.log(e.target.value);
+    const [tmpId, tmpModelTitle] = e.target.value.split(",");
+    console.log(tmpId, tmpModelTitle);
+    setModelId(tmpId);
+    setModel(tmpModelTitle);
+  }
+
+  const handleSelectPeriod = (e) => {
+    console.log(e.target.value);
+    setTime(e.target.value);
+  }
+
+  const tempCheckHandler = (e) => {
+    setTmpChecked(!tmpChecked);
+  }
+
+  const autoCheckHandler = (e) => {
+    setAutoChecked(!autoChecked);
   }
 
   return (
@@ -155,9 +240,9 @@ export const CreateSch = ({ onClose }) => {
       <div className={rootClass}>
         <Modal.Header>
           <h1>Create Sch</h1>
-          <ToggleItems items={steps} active={step} onSelect={setStep} />
 
           <Space>
+            <Button look="danger" size="compact" onClick={onRun} waiting={waiting}>Run</Button>
             <Button look="primary" size="compact" onClick={onCreate} waiting={waiting} disabled={error}>Save</Button>
           </Space>
         </Modal.Header>
@@ -172,8 +257,15 @@ export const CreateSch = ({ onClose }) => {
           setModel={setModel}
           period={period}
           setPeriod={setPeriod}
-          handleSelect={handleSelect}
+          tmpChecked={tmpChecked}
+          autoChecked={autoChecked}
+          handleSelectProject={handleSelectProject}
+          handleSelectModel={handleSelectModel}
+          handleSelectPeriod={handleSelectPeriod}
+          tempCheckHandler={tempCheckHandler}
+          autoCheckHandler={autoCheckHandler}
           projectsList={projectsList}
+          modelsList={modelsList}
           show={step === "name"}
         />
       </div>

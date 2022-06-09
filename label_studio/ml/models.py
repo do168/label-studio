@@ -295,6 +295,79 @@ class MLBackend(models.Model):
         result['data'] = ml_results[0]
         return result
 
+    def interactive_annotating_draw(self, task, context=None):
+        result = {}
+        if not self.is_interactive:
+            result['errors'] = ["Model is not set to be used for interactive preannotations"]
+            return result
+
+        tasks_ser = ExportDataSerializer([task], many=True, expand=['drafts', 'predictions', 'annotations']).data
+        print("tasks_ser: ", tasks_ser)
+
+        ml_api_result = self.api.make_predictions(
+            tasks=tasks_ser,
+            model_version=self.model_version,
+            project=self.project,
+            context=context,
+        )
+
+        print("ml_api_result: ", ml_api_result)
+        if ml_api_result.is_error:
+            logger.warning(f'Prediction not created for project {self}: {ml_api_result.error_message}')
+            result['errors'] = [ml_api_result.error_message]
+            return result
+
+        if not (isinstance(ml_api_result.response, dict) and 'results' in ml_api_result.response):
+            logger.warning(f'ML backend returns an incorrect response, it must be a dict: {ml_api_result.response}')
+            result['errors'] = ['Incorrect response from ML service: '
+                                'ML backend returns an incorrect response, it must be a dict.']
+            return result
+
+        ml_results = ml_api_result.response.get(
+            'results',
+            [
+                None,
+            ],
+        )
+
+        print("ml_results: ", ml_results)
+
+        if not isinstance(ml_results, list) or len(ml_results) < 1:
+            logger.warning(f'ML backend has to return list with 1 annotation but it returned: {ml_results}')
+            result['errors'] = ['Incorrect response from ML service: '
+                                'ML backend has to return list with more than 1 result.']
+            return result
+
+        result['data'] = ml_results[0]
+
+        responses = ml_api_result.response['results']
+        predictions = []
+        for task, response in zip(tasks_ser, responses):
+            if 'result' not in response:
+                logger.error(
+                    f"ML backend returns an incorrect prediction, it should be a dict with the 'result' field:"
+                    f" {response}"
+                )
+                return
+
+            predictions.append(
+                {
+                    'task': task['id'],
+                    'result': response['result'],
+                    'score': response.get('score'),
+                    'model_version': self.model_version,
+                }
+            )
+
+        print("predictions: ", predictions)
+        with conditional_atomic():
+            prediction_ser = PredictionSerializer(data=predictions, many=True)
+            prediction_ser.is_valid(raise_exception=True)
+            prediction_ser.save()
+
+        print("predict done using api...!!!")
+        return result
+
 
 class MLBackendPredictionJob(models.Model):
 

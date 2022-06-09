@@ -20,6 +20,8 @@ from ml.models import MLBackend
 from ml.api_connector import MLApi
 from core.utils.common import bool_from_request
 
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -88,6 +90,27 @@ class MLBackendListAPI(generics.ListCreateAPIView):
         project = get_object_with_check_and_log(self.request, Project, pk=project_pk)
         self.check_object_permissions(self.request, project)
         ml_backends = MLBackend.objects.filter(project_id=project.id)
+        for mlb in ml_backends:
+            mlb.update_state()
+        return ml_backends
+
+    def perform_create(self, serializer):
+        ml_backend = serializer.save()
+        ml_backend.update_state()
+
+
+class MLBackendModelsListAPI(generics.ListCreateAPIView):
+    parser_classes = (JSONParser, FormParser, MultiPartParser)
+    permission_required = ViewClassPermission(
+        GET=all_permissions.projects_view,
+        POST=all_permissions.projects_change,
+    )
+    serializer_class = MLBackendSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ["is_interactive"]
+
+    def get_queryset(self):
+        ml_backends = MLBackend.objects.all()
         for mlb in ml_backends:
             mlb.update_state()
         return ml_backends
@@ -200,7 +223,6 @@ class MLBackendDetailAPI(generics.RetrieveUpdateDestroyAPIView):
     ),
 )
 class MLBackendTrainAPI(APIView):
-
     permission_required = all_permissions.projects_change
 
     def post(self, request, *args, **kwargs):
@@ -235,23 +257,68 @@ class MLBackendTrainAPI(APIView):
     ),
 )
 class MLBackendInteractiveAnnotating(APIView):
-
     permission_required = all_permissions.tasks_view
 
     def post(self, request, *args, **kwargs):
         ml_backend = get_object_with_check_and_log(request, MLBackend, pk=self.kwargs['pk'])
         self.check_object_permissions(self.request, ml_backend)
+        logger.error("request: ", request.data)
         serializer = MLInteractiveAnnotatingRequest(data=request.data)
         serializer.is_valid(raise_exception=True)
         validated_data = serializer.validated_data
 
+        project = Project.objects.get(id=int(self.request.data['project']))
 
-        task = get_object_with_check_and_log(request, Task, pk=validated_data['task'], project=ml_backend.project)
+        task = get_object_with_check_and_log(request, Task, pk=validated_data['task'], project=project)
         context = validated_data.get('context')
 
-        result = ml_backend.interactive_annotating(task, context)
+        result = ml_backend.interactive_annotating_draw(task, context)
 
         return Response(
             result,
             status=status.HTTP_200_OK,
         )
+
+
+
+
+
+class SchMLBackendInteractiveAnnotating(APIView):
+    permission_required = all_permissions.tasks_view
+
+    def post(self, **kwargs):
+        from rest_framework.generics import get_object_or_404 as get_object_or_404_rest
+        # print(kwargs['pk'])
+        ml_backend = get_object_or_404_rest(MLBackend, pk=kwargs['pk'])
+        # ml_backend = get_object_with_check_and_log(request, MLBackend, pk=self.kwargs['pk'])
+        # logger.error(ml_backend.project)
+        # self.check_object_permissions(self.request, ml_backend)
+        # serializer = MLInteractiveAnnotatingRequest(data=request.data)
+        #
+        # serializer.is_valid(raise_exception=True)
+        # validated_data = serializer.validated_data
+        #
+        # task = get_object_with_check_and_log(request, Task, pk=validated_data['task'], project=ml_backend.project)
+        # context = validated_data.get('context')
+        # ml_backend = get_object_with_check_and_log(request, MLBackend, pk=self.kwargs['pk'])
+        # self.check_object_permissions(self.request, ml_backend)
+        # serializer = MLInteractiveAnnotatingRequest(data=request.data)
+        # serializer.is_valid(raise_exception=True)
+        # validated_data = serializer.validated_data
+        #
+        # task = get_object_with_check_and_log(request, Task, pk=validated_data['task'], project=ml_backend.project)
+        # context = validated_data.get('context')
+        project = Project.objects.get(id=int(kwargs['projectId']))
+
+        tasks = Task.objects.filter(project=ml_backend.project)
+        result = []
+        for i in range(len(tasks)):
+            print(tasks[i])
+            result.append(ml_backend.interactive_annotating_draw(tasks[i], None))
+
+        print(result[0])
+        return Response(
+            result,
+            status=status.HTTP_200_OK,
+        )
+

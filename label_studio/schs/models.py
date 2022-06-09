@@ -30,10 +30,16 @@ class Sch(SchMixin, models.Model):
         max_length=1000,
         null=False,
     )
+    project = models.ForeignKey(
+        'projects.Project', on_delete=models.CASCADE, related_name='schs_prj', null=True, default=None
+    )
     inf_model = models.CharField(
         _('sch inference model'),
         max_length=1000,
         null=False,
+    )
+    model = models.ForeignKey(
+        'ml.MLBackend', on_delete=models.CASCADE, related_name='schs_model', null=True
     )
     period = models.CharField(
         _('sch period'),
@@ -63,6 +69,10 @@ class Sch(SchMixin, models.Model):
 
     def save(self, *args, recalc=True, **kwargs):
         super(Sch, self).save(*args, **kwargs)
+
+    def get_all_objects(self):
+        queryset = self._meta.model.objects.all()
+        return queryset
 
     @staticmethod
     def django_settings():

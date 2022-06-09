@@ -78,11 +78,8 @@ export const DataManagerPage = ({ ...props }) => {
       params: { project: project.id },
     });
 
-    console.log("mlBackends: ", mlBackends);
 
     const interactiveBacked = (mlBackends ?? []).find(({ is_interactive }) => is_interactive);
-
-    console.log("interactiveBackend: ", interactiveBacked);
 
     const dataManager = (dataManagerRef.current = dataManagerRef.current ?? await initializeDataManager(
       root.current,
@@ -114,13 +111,10 @@ export const DataManagerPage = ({ ...props }) => {
     });
 
     if (interactiveBacked) {
-      console.log("interativeBackend is not null", interactiveBacked);
       dataManager.on("lsf:regionFinishedDrawing", (reg, group) => {
         const { lsf, task, currentAnnotation: annotation } = dataManager.lsf;
         const ids = group.map(r => r.id);
         const result = annotation.serializeAnnotation().filter((res) => ids.includes(res.id));
-        
-
         const suggestionsRequest = api.callApi("mlInteractive", {
           params: { pk: interactiveBacked.id },
           body: {

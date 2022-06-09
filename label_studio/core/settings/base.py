@@ -186,6 +186,7 @@ INSTALLED_APPS = [
     'io_storages',
     'ml',
     'webhooks',
+    'django_crontab',
 ]
 
 MIDDLEWARE = [
@@ -466,3 +467,7 @@ mimetypes.add_type("image/png", ".png", True)
 
 # fields name was used in DM api before
 REST_FLEX_FIELDS = {"FIELDS_PARAM": "include"}
+
+CRONJOBS = [
+    ('*/5 * * * *', 'scheduled_job.cron', '>> ~/Desktop/scheduled_job.log')
+]

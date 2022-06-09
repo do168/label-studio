@@ -1,6 +1,6 @@
-.people-list
+.sch-list
   width 100%
-  min-width 650px
+  min-width 1300px
   font-size 16px
 
   &__wrapper
@@ -14,7 +14,7 @@
     justify-content center
     align-items center
 
-  &__users
+  &__schs
     width 100%
     text-align left
     border-collapse collapse
@@ -33,7 +33,7 @@
     display flex
     position relative
     align-items center
-    font 16px/normal 'Roboto'
+    font 12px/normal 'Roboto'
 
     &.last-activity
       color rgba(#000, 0.4)
@@ -44,20 +44,23 @@
 
   &__field,
   &__column
-    &.avatar
-      width 28px
-      box-sizing content-box
-
-    &.name
-      flex 1
-
-    &.email
-      width 200px
-
+    &.title
+      width 150px
+    &.dataset
+      width 150px
+    &.model
+      width 150px
+    &.period
+      width 70px
+    &.tmp-auto-remove
+      width 100px
+    &.prj-auto-create
+      width 120px
     &.last-activity
-      width 160px
-
-  &__user
+      width 150px
+    &.created-by
+      width 150px
+  &__sch
     cursor pointer
     display flex
 

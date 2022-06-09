@@ -56,15 +56,16 @@ def save_user(request, next_page, user_form, organization_token):
     user.username = user.email.split('@')[0]
     user.save()
 
-    org = Organization.objects.filter(token=organization_token).first()
-    org.add_user(user)
+    # org = Organization.objects.filter(token=organization_token).first()
+    # org.add_user(user)
 
     # if Organization.objects.exists():
     #     org = Organization.objects.first()
     #     org = Organization.create_organization(created_by=user, title='Label Studio2')
     #     org.add_user(user)
     # else:
-    #     org = Organization.create_organization(created_by=user, title='Label Studio')
+    org = Organization.create_organization(created_by=user, title='Label Studio')
+    org.add_user(user)
 
     user.active_organization = org
     user.save(update_fields=['active_organization'])

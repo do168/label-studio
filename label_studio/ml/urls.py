@@ -10,12 +10,18 @@ app_name = 'ml'
 _api_urlpatterns = [
     # All ml backends
     path('', api.MLBackendListAPI.as_view(), name='ml-list'),
+    path('list', api.MLBackendModelsListAPI.as_view(), name='ml-all-list'),
     path('<int:pk>', api.MLBackendDetailAPI.as_view(), name='ml-detail'),
     path('<int:pk>/train', api.MLBackendTrainAPI.as_view(), name='ml-train'),
     path(
         '<int:pk>/interactive-annotating',
         api.MLBackendInteractiveAnnotating.as_view(),
         name='ml-interactive-annotating',
+    ),
+    path(
+        '<int:pk>/sch-interactive-annotating',
+        api.SchMLBackendInteractiveAnnotating.as_view(),
+        name='sch-ml-interactive-annotating',
     ),
 ]
 

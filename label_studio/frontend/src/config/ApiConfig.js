@@ -49,6 +49,7 @@ export const API_CONFIG = {
 
     // ML
     mlBackends: "GET:/ml",
+    mLBackendsList: "GET:/ml/list",
     mlBackend: "GET:/ml/:pk",
     addMLBackend: "POST:/ml",
     updateMLBackend: "PATCH:/ml/:pk",
@@ -57,6 +58,7 @@ export const API_CONFIG = {
     predictWithML: "POST:/ml/:pk/predict",
     modelVersions: "/projects/:pk/model-versions",
     mlInteractive: "POST:/ml/:pk/interactive-annotating",
+    schMlInteractive: "POST:/ml/:pk/sch-interactive-annotating",
 
     // Export
     export: "/projects/:pk/export",

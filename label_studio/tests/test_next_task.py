@@ -640,7 +640,7 @@ def test_breadth_first_simple(business_client):
     assert json.loads(r.content)['id'] == id1
 
     # and completes it
-    r = ann1.post(f'/api/tasks/{id1}/annotations/', data={'task': id1, 'result': annotation_result})
+    r = post(f'/api/tasks/{id1}/annotations/', data={'task': id1, 'result': annotation_result})
     assert r.status_code == 201
 
     # ann2 takes first task because maximum_annotations=2
@@ -649,7 +649,7 @@ def test_breadth_first_simple(business_client):
     assert json.loads(r.content)['id'] == id1
 
     # and completes it
-    r = ann2.post(f'/api/tasks/{id1}/annotations/', data={'task': id1, 'result': annotation_result})
+    r = post(f'/api/tasks/{id1}/annotations/', data={'task': id1, 'result': annotation_result})
     assert r.status_code == 201
     completed_task = Task.objects.get(id=id1)
     assert completed_task.is_labeled
@@ -808,7 +808,7 @@ def test_breadth_first_with_label_race(configured_project, business_client):
     assert json.loads(r.content)['id'] == id1
 
     # and completes it
-    r = ann1.post(f'/api/tasks/{id1}/annotations/', data={'task': id1, 'result': annotation_result})
+    r = post(f'/api/tasks/{id1}/annotations/', data={'task': id1, 'result': annotation_result})
     assert r.status_code == 201
 
     # ann1 takes second task and freezes
@@ -822,7 +822,7 @@ def test_breadth_first_with_label_race(configured_project, business_client):
     assert json.loads(r.content)['id'] == id1
 
     # and completes it
-    r = ann2.post(f'/api/tasks/{id1}/annotations/', data={'task': id1, 'result': annotation_result})
+    r = post(f'/api/tasks/{id1}/annotations/', data={'task': id1, 'result': annotation_result})
     assert r.status_code == 201
     completed_task = Task.objects.get(id=id1)
     assert completed_task.is_labeled
@@ -923,7 +923,7 @@ def test_label_race_with_overlap(configured_project, business_client):
     assert json.loads(r.content)['id'] == overlap_id
 
     # ann2 completes overlapped task
-    r = ann2.post(f'/api/tasks/{overlap_id}/annotations/', data={'task': overlap_id, 'result': annotation_result})
+    r = post(f'/api/tasks/{overlap_id}/annotations/', data={'task': overlap_id, 'result': annotation_result})
     assert r.status_code == 201
 
     # ann1 takes next task, and now it is overlapped, since lock was released by ann2 annotation
@@ -932,7 +932,7 @@ def test_label_race_with_overlap(configured_project, business_client):
     assert json.loads(r.content)['id'] == overlap_id
 
     # ann1 completes overlapped task
-    r = ann1.post(f'/api/tasks/{overlap_id}/annotations/', data={'task': overlap_id, 'result': annotation_result})
+    r = post(f'/api/tasks/{overlap_id}/annotations/', data={'task': overlap_id, 'result': annotation_result})
     assert r.status_code == 201
 
     # ann1 takes next task, now it is another one since overlapped is labeled
@@ -1037,7 +1037,7 @@ def test_label_w_drafts_race_with_overlap(configured_project, business_client):
     assert json.loads(r.content)['id'] == overlap_id
 
     # ann2 send draft for overlapped task
-    r = ann2.post(f'/api/tasks/{overlap_id}/annotations/', data=annotation_draft_result)
+    r = post(f'/api/tasks/{overlap_id}/annotations/', data=annotation_draft_result)
     assert r.status_code == 201
 
     # ann1 takes next task, and now it is overlapped, since lock was released by ann2 annotation
@@ -1047,7 +1047,7 @@ def test_label_w_drafts_race_with_overlap(configured_project, business_client):
     assert json.loads(r.content)['id'] == overlap_id
 
     # ann1 completes overlapped task
-    r = ann1.post(f'/api/tasks/{overlap_id}/annotations/', data={'task': overlap_id, 'result': annotation_result})
+    r = post(f'/api/tasks/{overlap_id}/annotations/', data={'task': overlap_id, 'result': annotation_result})
     assert r.status_code == 201
 
     # ann1 takes next task, now it is another one since overlapped is labeled
@@ -1108,7 +1108,7 @@ def test_fetch_final_taken_task(business_client):
     print('ann1 takes any task and complete it')
     r = ann1.get(f'/api/projects/{project.id}/next')
     task_id = json.loads(r.content)['id']
-    ann1.post(f'/api/tasks/{task_id}/annotations/', data={'task': task_id, 'result': annotation_result})
+    post(f'/api/tasks/{task_id}/annotations/', data={'task': task_id, 'result': annotation_result})
 
     print('ann2 takes the same task (because of depth-first) but just lock it - don\'t complete')
     r = ann2.get(f'/api/projects/{project.id}/next')
