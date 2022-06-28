@@ -29,7 +29,7 @@ export const EmptySchsList = ({ openModal }) => {
   );
 };
 
-export const PeopleList = ( { schsList, getSelectedRows }) => {
+export const PeopleList = ({ schsList, getSelectedRows }) => {
   // useEffect(() => {
   //   if (isDefined(defaultSelected) && schsList) {
   //     const selected = schsList.find(({ user }) => user.id === Number(defaultSelected));
@@ -44,7 +44,7 @@ export const PeopleList = ( { schsList, getSelectedRows }) => {
     MasterChecked: false,
     SelectedListL: [],
   })
-  
+
 
   const onMasterCheck = (e) => {
     let tempList = state.List;
@@ -57,6 +57,7 @@ export const PeopleList = ( { schsList, getSelectedRows }) => {
       List: tempList,
       SelectedList: state.List.filter((e) => e.selected),
     });
+    getSelectedRows(state.List.filter((e) => e.selected))
   };
 
   const onItemCheck = (e, item) => {
@@ -76,9 +77,9 @@ export const PeopleList = ( { schsList, getSelectedRows }) => {
       List: tempList,
       SelectedList: state.List.filter((e) => e.selected),
     })
+    getSelectedRows(state.List.filter((e) => e.selected))
   }
 
-  getSelectedRows(state.List.filter((e) => e.selected))
 
   return (
     <>
@@ -86,8 +87,8 @@ export const PeopleList = ( { schsList, getSelectedRows }) => {
         <Elem name="wrapper">
           <Elem name="schs">
             <Elem name="header">
-              <Elem name="column" mix="form-check-input"> 
-                <input type="checkbox" className="form-check-input" checked={state.MasterChecked} id="mastercheck" onChange={e=> onMasterCheck(e)}
+              <Elem name="column" mix="form-check-input">
+                <input type="checkbox" value="" className="form-check-input" checked={state.MasterChecked} id="mastercheck" onChange={e => onMasterCheck(e)}
                 />
               </Elem>
               <Elem name="column" mix="title">Name</Elem>
@@ -105,7 +106,7 @@ export const PeopleList = ( { schsList, getSelectedRows }) => {
                 return (
                   <Elem key={`sch-${sch.id}`} name="sch">
                     <Elem name="field" mix="form-check-input">
-                      <input type="checkbox" checked={sch.selected} className="form-check-input" onChange={e=> onItemCheck(e, sch)} />
+                      <input type="checkbox" value="" checked={sch.selected} className="form-check-input" onChange={e => onItemCheck(e, sch)} />
                     </Elem>
                     <Elem name="field" mix="title">
                       {sch.title}
@@ -120,10 +121,10 @@ export const PeopleList = ( { schsList, getSelectedRows }) => {
                       {sch.period}
                     </Elem>
                     <Elem name="field" mix="tmp-auto-remove">
-                      {sch.tmp_auto_remove==true ? "true" : "false"} 
+                      {sch.tmp_auto_remove == true ? "true" : "false"}
                     </Elem>
                     <Elem name="field" mix="prj-auto-create">
-                      {sch.prj_auto_create==true ? "true" : "false"}
+                      {sch.prj_auto_create == true ? "true" : "false"}
                     </Elem>
                     <Elem name="field" mix="last-activity">
                       {sch.updated_at}

@@ -53,12 +53,13 @@ export const PeoplePage = () => {
   }, [schsList.length]);
 
 
-  const getSelectedRows = (selectedScheduleList) => {
-    console.log(selectedScheduleList);
-    setSelectedScheduleList(selectedScheduleList);
+  const getSelectedRows = (tmp) => {
+    tmp = tmp ?? []
+    console.log("selected : ", tmp);
+    setSelectedScheduleList(tmp);
   }
 
-  const deleteSchs = async() => {
+  const deleteSchs = () => {
     console.log(selectedScheduleList);
   }
 
@@ -70,15 +71,15 @@ export const PeoplePage = () => {
           <Space></Space>
 
           <Space>
-          <Elem tag={Button} onClick={deleteSchs}>Delete Schedule</Elem>
-          <Elem name="action" tag={Button} onClick={openModal} look="primary">Create Schedule</Elem>
+            <Elem tag={Button} onClick={deleteSchs}>Delete Schedule</Elem>
+            <Elem name="action" tag={Button} onClick={openModal} look="primary">Create Schedule</Elem>
           </Space>
         </Space>
         {modal && <CreateSch onClose={closeModal} />}
       </Elem>
       <Oneof value={networkState}>
         <Elem name="loading" case="loading">
-          <Spinner size={64}/>
+          <Spinner size={64} />
         </Elem>
         <Elem name="content" case="loaded">
           {schsList.length ? (
