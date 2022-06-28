@@ -286,9 +286,10 @@ class MLBackendInteractiveAnnotating(APIView):
 class SchMLBackendInteractiveAnnotating(APIView):
     permission_required = all_permissions.tasks_view
 
-    def post(self, **kwargs):
+    def post(self, request, *args, **kwargs):
         from rest_framework.generics import get_object_or_404 as get_object_or_404_rest
         # print(kwargs['pk'])
+        logging.error(kwargs)
         ml_backend = get_object_or_404_rest(MLBackend, pk=kwargs['pk'])
         # ml_backend = get_object_with_check_and_log(request, MLBackend, pk=self.kwargs['pk'])
         # logger.error(ml_backend.project)
@@ -308,7 +309,7 @@ class SchMLBackendInteractiveAnnotating(APIView):
         #
         # task = get_object_with_check_and_log(request, Task, pk=validated_data['task'], project=ml_backend.project)
         # context = validated_data.get('context')
-        project = Project.objects.get(id=int(kwargs['projectId']))
+        project = Project.objects.get(id=int(request.data['projectId']))
 
         tasks = Task.objects.filter(project=ml_backend.project)
         result = []

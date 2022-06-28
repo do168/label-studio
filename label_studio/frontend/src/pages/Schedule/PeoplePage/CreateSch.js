@@ -17,23 +17,23 @@ const getCurrentPage = () => {
 };
 
 
-const SchName = ({ name, setName, onSubmit, error, dataset, setDataset, model, setModel, period, setPeriod, handleSelectProject, handleSelectModel, handleSelectPeriod, 
-  projectsList, modelsList, tmpChecked, autoChecked, tempCheckHandler, autoCheckHandler, show = true }) => !show ? null :(
+const SchName = ({ name, setName, onSubmit, error, setPeriod, handleSelectProject, handleSelectModel, setTime,
+   projectsList, modelsList, tmpChecked, autoChecked, show = true }) => !show ? null :(
   <form className={cn("project-name")} onSubmit={e => { e.preventDefault(); onSubmit(); }}>
     <div className="field field--wide">
-      <label htmlFor="project_name">Sch Name</label>
-      <input name="name" id="project_name" value={name} onChange={e => setName(e.target.value)} />
+      <label htmlFor="sch_name">Sch Name</label>
+      <input name="name" id="sch_name" value={name} onChange={e => setName(e.target.value)} />
       {error && <span className="error">{error}</span>}
     </div>
     <div className="field field--wide">
-      <label htmlFor="project_dataset">Dataset</label>
-      <select 
+      <label htmlFor="sch_dataset">Dataset</label>
+      <select
         id="project_dataset"
         name="dataset"
-        onChange={e=>handleSelectProject(e)}>
+        onChange={e => handleSelectProject(e)}>
+        <option value="" selected disabled hidden >선택하세요.</option>
         {
-          
-          projectsList.map((item)=>(
+          projectsList.map((item) => (
             <option value={[item.id, item.title]} key={item.id}>
               {item.title}
             </option>
@@ -43,12 +43,13 @@ const SchName = ({ name, setName, onSubmit, error, dataset, setDataset, model, s
     </div>
     <div className="field field--wide">
       <label htmlFor="sch_inference_model">Inference Model</label>
-      <select 
+      <select
         id="project_model"
         name="model"
-        onChange={e=>handleSelectModel(e)}>
+        onChange={e => handleSelectModel(e)}>
+        <option value="" selected disabled hidden >선택하세요.</option>
         {
-          modelsList.map((item)=>(
+          modelsList.map((item) => (
             <option value={[item.id, item.title]} key={item.id}>
               {item.title}
             </option>
@@ -58,21 +59,20 @@ const SchName = ({ name, setName, onSubmit, error, dataset, setDataset, model, s
     </div>
     <div className="field field--wide">
       <label htmlFor="sch_period">Period</label>
-      <div style={{display:"flex"}}>
+      <div style={{ display: "flex" }}>
         <input
           name="period"
           id="sch_period"
           placeholder="period of your sch"
           rows="1"
-          value={period}
-          onChange={e => setPeriod(e.target.value)}
-          style={{width:"50%", height:"13px"}}
+          onChange={e=> setPeriod(e.target.value)}
         />
         <select 
           id="project_model"
           name="model"
           style={{width:"30%", height:"33px"}}
-          onChange={e=>handleSelectPeriod(e)}>
+          onChange={e=>setTime(e.target.value)}>
+            <option value="" selected disabled hidden >선택하세요.</option>
             <option value="1">시간
             </option>
             <option value="168">주
@@ -80,14 +80,15 @@ const SchName = ({ name, setName, onSubmit, error, dataset, setDataset, model, s
             <option value="720">월
             </option>
         </select>
-       </div>
+
+      </div>
     </div>
     <fieldset>
       <legend>
         Group Box
       </legend>
-      임시폴더 자동삭제 <input type="checkbox" checked={tmpChecked} onChange={e=>tempCheckHandler(e)}></input>수행 후 Target dataset이 지워집니다(data포함)<br></br>
-      프로젝트 자동생성 <input type="checkbox" checked={autoChecked} onChange={e=>autoCheckHandler(e)}></input>수행 후 Label Studio에 자동으로 결과물이 프로젝트에 등록됩니다
+      임시폴더 자동삭제 <input type="checkbox" checked={tmpChecked} ></input>수행 후 Target dataset이 지워집니다(data포함)<br></br>
+      프로젝트 자동생성 <input type="checkbox" checked={autoChecked} ></input>수행 후 Label Studio에 자동으로 결과물이 프로젝트에 등록됩니다
     </fieldset>
   </form>
 );
@@ -108,12 +109,12 @@ export const CreateSch = ({ onClose }) => {
   const [period, setPeriod] = React.useState("");
   const [Selected, setSelected] = React.useState("");
   const [projectId, setProjectId] = React.useState("");
-  const [time, setTime] = React.useState("");
+  const [sch_time, setTime] = React.useState(1);
 
   const [projectsList, setProjectsList] = React.useState([]);
   const [modelsList, setModelsList] = React.useState([]);
   const [currentPage, setCurrentPage] = React.useState(getCurrentPage());
-  const [totalItems, setTotalItems] = React.useState(1);
+  const [totalItems, setTotalItems] = React.useState("");
 
   const [tmpChecked, setTmpChecked] = React.useState(false);
   const [autoChecked, setAutoChecked] = React.useState(false);
@@ -145,7 +146,7 @@ export const CreateSch = ({ onClose }) => {
     const response = await api.callApi('schMlInteractive', {
       params: { pk: modelId, projectId: projectId},
       body: {
-        task: 17,
+        projectId: projectId
       }
     })
 
@@ -158,7 +159,9 @@ export const CreateSch = ({ onClose }) => {
 
   const onCreate = React.useCallback(async () => {
     setWaitingStatus(true);
-    const calcPeriod = period*time;
+    console.log("period: ", period);
+    console.log("time :", sch_time);
+    const calcPeriod = period*sch_time;
     console.log(name, dataset, model, period);
     const response = await api.callApi('createSch',{
       body: {
@@ -222,16 +225,11 @@ export const CreateSch = ({ onClose }) => {
     setModel(tmpModelTitle);
   }
 
-  const handleSelectPeriod = (e) => {
-    console.log(e.target.value);
-    setTime(e.target.value);
-  }
-
-  const tempCheckHandler = (e) => {
+  const tempCheckHandler = async () => {
     setTmpChecked(!tmpChecked);
   }
 
-  const autoCheckHandler = (e) => {
+  const autoCheckHandler = async () => {
     setAutoChecked(!autoChecked);
   }
 
@@ -255,13 +253,12 @@ export const CreateSch = ({ onClose }) => {
           setDataset={setDataset}
           model={model}
           setModel={setModel}
-          period={period}
           setPeriod={setPeriod}
           tmpChecked={tmpChecked}
           autoChecked={autoChecked}
           handleSelectProject={handleSelectProject}
           handleSelectModel={handleSelectModel}
-          handleSelectPeriod={handleSelectPeriod}
+          setTime={setTime}
           tempCheckHandler={tempCheckHandler}
           autoCheckHandler={autoCheckHandler}
           projectsList={projectsList}

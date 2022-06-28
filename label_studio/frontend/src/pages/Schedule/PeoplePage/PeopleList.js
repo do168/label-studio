@@ -29,7 +29,7 @@ export const EmptySchsList = ({ openModal }) => {
   );
 };
 
-export const PeopleList = ( { schsList }) => {
+export const PeopleList = ( { schsList, getSelectedRows }) => {
   // useEffect(() => {
   //   if (isDefined(defaultSelected) && schsList) {
   //     const selected = schsList.find(({ user }) => user.id === Number(defaultSelected));
@@ -38,24 +38,47 @@ export const PeopleList = ( { schsList }) => {
   //   }
   // }, [schsList, defaultSelected]);
 
-  let state = {
+
+  const [state, setState] = React.useState({
     List: schsList,
     MasterChecked: false,
     SelectedListL: [],
-  }
+  })
+  
 
   const onMasterCheck = (e) => {
-    let tempList = this.state.List;
+    let tempList = state.List;
     // Check/ UnCheck All Items
     tempList.map((schedule) => (schedule.selected = e.target.checked));
 
     //Update State
-    this.setState({
+    setState({
       MasterChecked: e.target.checked,
       List: tempList,
-      SelectedList: this.state.List.filter((e) => e.selected),
+      SelectedList: state.List.filter((e) => e.selected),
     });
   };
+
+  const onItemCheck = (e, item) => {
+    let tempList = state.List;
+    tempList.map((schedule) => {
+      if (schedule.id === item.id) {
+        schedule.selected = e.target.checked;
+      }
+      return schedule;
+    });
+
+    const totalItems = state.List.length;
+    const totalCheckedItems = tempList.filter((e) => e.selected).length;
+
+    setState({
+      MasterChecked: totalItems === totalCheckedItems,
+      List: tempList,
+      SelectedList: state.List.filter((e) => e.selected),
+    })
+  }
+
+  getSelectedRows(state.List.filter((e) => e.selected))
 
   return (
     <>
@@ -77,12 +100,12 @@ export const PeopleList = ( { schsList }) => {
               <Elem name="column" mix="created-by">Created By</Elem>
             </Elem>
             <Elem name="body">
-              {schsList.map((sch) => {
+              {state.List.map((sch) => {
 
                 return (
                   <Elem key={`sch-${sch.id}`} name="sch">
                     <Elem name="field" mix="form-check-input">
-                      <input type="checkbox" checked={false} className="form-check-input" onChange={e=> onMasterCheck(e)} />
+                      <input type="checkbox" checked={sch.selected} className="form-check-input" onChange={e=> onItemCheck(e, sch)} />
                     </Elem>
                     <Elem name="field" mix="title">
                       {sch.title}

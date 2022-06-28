@@ -26,6 +26,7 @@ export const PeoplePage = () => {
   const [modal, setModal] = React.useState(false);
   const openModal = setModal.bind(null, true);
   const closeModal = setModal.bind(null, false);
+  const [selectedScheduleList, setSelectedScheduleList] = React.useState([]);
 
   const setContextProps = useContextProps();
 
@@ -52,6 +53,16 @@ export const PeoplePage = () => {
   }, [schsList.length]);
 
 
+  const getSelectedRows = (selectedScheduleList) => {
+    console.log(selectedScheduleList);
+    setSelectedScheduleList(selectedScheduleList);
+  }
+
+  const deleteSchs = async() => {
+    console.log(selectedScheduleList);
+  }
+
+
   return (
     <Block name="people">
       <Elem name="controls">
@@ -59,6 +70,7 @@ export const PeoplePage = () => {
           <Space></Space>
 
           <Space>
+          <Elem tag={Button} onClick={deleteSchs}>Delete Schedule</Elem>
           <Elem name="action" tag={Button} onClick={openModal} look="primary">Create Schedule</Elem>
           </Space>
         </Space>
@@ -72,6 +84,7 @@ export const PeoplePage = () => {
           {schsList.length ? (
             <PeopleList
               schsList={schsList}
+              getSelectedRows={getSelectedRows}
             />
           ) : (
             <EmptySchsList openModal={openModal} />

@@ -304,8 +304,6 @@ class ReImportAPI(ImportAPI):
 
     @retry_database_locked()
     def create(self, request, *args, **kwargs):
-        if not request.user.is_staff:
-            return HttpResponse(status=403)
         start = time.time()
         files_as_tasks_list = bool_from_request(request.data, 'files_as_tasks_list', True)
         file_upload_ids = self.request.data.get('file_upload_ids')
